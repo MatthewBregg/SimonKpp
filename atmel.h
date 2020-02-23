@@ -1,11 +1,21 @@
 #ifndef ATMEL_H
 #define ATMEL_H
 
+constexpr byte cpuMhz = 16U;
+
 constexpr byte T0CLK = 1U << CS01; // CLK/8 == 2 MHZ.
 constexpr byte T1CLK = 0xC1u;
 constexpr byte T2CLK = 1U << CS20; // (CLK/2) 16 MHZ
 constexpr byte TIMER_INTERRUPTS_ENABLE =  (1U<<TOIE1) | (1U<<OCIE1A) | (1U<<TOIE2);
 
+
+void zeroTCNT0() {
+    TCNT0 = 0x00U;
+}
+
+byte getTCNT0() {
+    return TCNT0;
+}
 
 // We want to do this AFTER beeping!
 void enableTimerInterrupts() {
@@ -94,13 +104,13 @@ void CpFetOff() {
     CPFET_PORT = CPFET_PORT | getByteWithBitSet(CpFetIdx);
 }
 
-void ApFetOp() {
+void ApFetOn() {
     APFET_PORT = APFET_PORT & getByteWithBitCleared(ApFetIdx);
 }
-void BpFetOp() {
+void BpFetOn() {
     BPFET_PORT = BPFET_PORT & getByteWithBitCleared(BpFetIdx);
 }
-void CpFetOp() {
+void CpFetOn() {
     CPFET_PORT = CPFET_PORT & getByteWithBitCleared(CpFetIdx);
 }
 
