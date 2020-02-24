@@ -1,9 +1,28 @@
 #ifndef ATMEL_H
 #define ATMEL_H
 
+// Notes: delayMicroseconds is a NOP loop, no interrupts!
+https://electronics.stackexchange.com/questions/84776/arduino-delaymicroseconds
+// Millis and Micros() both use timer0, whose frequency we clobbered.
+// https://www.best-microcontroller-projects.com/arduino-millis.html
+// https://ucexperiment.wordpress.com/2012/03/17/examination-of-the-arduino-micros-function/
+// We went from a prescaler of 64 to 8, so multiply the output of millis() * 8 and it should be accurate.
+// Micros is overflow count + tcnt0, so will NOT be accurate with that method however!
+// We could however, implement our own micros via using the timer0_overflow_count ourself!
+
 constexpr byte cpuMhz = 16U;
 
+// T0CLK INFO, for TIMER0
+// Set to increment twice an us, sets CS01 on.
 constexpr byte T0CLK = 1U << CS01; // CLK/8 == 2 MHZ.
+// T1CLK INFO, for TIMER1
+// Set to increment 16 times a us.
+// Also set the ICNC1 noise cancelling bit, and the ICES1 bit to trigger the interrupt on the rising edge.
+// http://www.avrbeginners.net/architecture/timers/timers.html
+// Look up the ICP pin and such.
+// Essentially, on a input capture pin, on a rising/falling pulse, transfer the current value in TCNT1 into
+// input capture register (ICR1), which can then be used in the ISR to measure the prior/next pulse.
+// EX: Clear TCNT1 on the rising edge, and then measure on the known to be coming falling edge.
 constexpr byte T1CLK = 0xC1u;
 constexpr byte T2CLK = 1U << CS20; // (CLK/2) 16 MHZ
 constexpr byte TIMER_INTERRUPTS_ENABLE =  (1U<<TOIE1) | (1U<<OCIE1A) | (1U<<TOIE2);
@@ -13,6 +32,9 @@ void zeroTCNT0() {
     TCNT0 = 0x00U;
 }
 
+// Note: With our current prescaler setting,
+// TCNT0 is incremented twice each microsecond.
+// If we reset TCNT0, We can use this to EX, loop for 16 us with while(getTCNT0() < 32) { }...
 byte getTCNT0() {
     return TCNT0;
 }
@@ -41,7 +63,7 @@ void setDefaultRegisterValues() {
     /////////////////////////////////////////////
     // Set the TIMERS to their default values. //
     /////////////////////////////////////////////
-    TCCR0 = T0CLK; // timer0: beep control, delays
+    TCCR0 = T0CLK; // timer0: beep control, delays;
     TCCR1B = T1CLK; // timer1: communtation timing, RC pulse measurement.
     TCCR2 = B00000000; // timer2: PWM, stopped.
 
