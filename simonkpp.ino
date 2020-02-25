@@ -43,6 +43,12 @@ volatile byte rct_beacon = 0; // Counter which increments while rc_timeout is 0 
 // https://www.avrfreaks.net/forum/return-statement-isr                              //
 ///////////////////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Be sure to check interrupt names for the ATMEGA8 here 							     //
+// https://www.nongnu.org/avr-libc/user-manual/group__avr__interrupts.html#gad28590624d422cdf30d626e0a506255f	     //
+// The LEDs can be used to verify an interrupt works				      				     //
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // timer1 output compare interrupt
 ISR(TIMER1_COMPA_vect) {
     if (ocr1ax < 1) {

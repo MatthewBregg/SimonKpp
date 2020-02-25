@@ -41,6 +41,9 @@ byte getTCNT0() {
 
 // We want to do this AFTER beeping!
 void enableTimerInterrupts() {
+    // Note:  Atmega8 only has TIMSK, while ATMEGA328P and co have TIMSK0/1, which makes
+    // some docs/code confusing, as the Atmega328P/Atmega8 are often interchanged/considered the same.
+    // Well, this is one of those small differences...
     // https://web.ics.purdue.edu/~jricha14/Timer_Stuff/TIFR.htm
     TIFR = TIMER_INTERRUPTS_ENABLE; // Clear TOIE1, OCIE1A, and TOIE2 flags
     // https://web.ics.purdue.edu/~jricha14/Timer_Stuff/TIMSK.htm
