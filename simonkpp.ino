@@ -11,9 +11,6 @@
 void setup() {
   // put your setup code here, to run once:
     setDefaultRegisterValues();
-}
-
-void loop() {
     // Start off with the beepies!
     beepF1();
     delay(2000);
@@ -23,6 +20,11 @@ void loop() {
     delay(2000);
     beepF4();
     delay(2000);
+}
+
+void loop() {
+    enableTimerInterrupts();
+    sei();
     return;
 }
 
@@ -42,7 +44,7 @@ volatile byte rct_beacon = 0; // Counter which increments while rc_timeout is 0 
 ///////////////////////////////////////////////////////////////////////////////////////
 
 // timer1 output compare interrupt
-ISR(TIMER1_COMPA_VECT) {
+ISR(TIMER1_COMPA_vect) {
     if (ocr1ax < 1) {
 	oct1_pending = false; // Passed OCT1A.
     }
@@ -50,10 +52,9 @@ ISR(TIMER1_COMPA_VECT) {
 }
 
 // timer1 overflow interrupt (happens every 4096µs)
-ISR(TIMER1_OVF_VECT) {
+ISR(TIMER1_OVF_vect) {
     ++tcnt1x;
-
-    if ( tcnt1x & B1111 /* 15U */ == 0 ) {
+    if ( (tcnt1x & B1111 /* 15U */ ) == 0 ) {
 	if ( rc_timeout == 0 ) {
 	    // rc_timeout hit, increase the beacon.
 	    ++rct_boot;

@@ -69,11 +69,11 @@ void setDefaultRegisterValues() {
 
 }
 
-constexpr getByteWithBitSet(byte bitIndex) {
+constexpr byte getByteWithBitSet(byte bitIndex) {
     return B00000001 << bitIndex;
 }
 
-constexpr getByteWithBitCleared(byte bitIndex) {
+constexpr byte getByteWithBitCleared(byte bitIndex) {
     return ~getByteWithBitSet(bitIndex);
 }
 
