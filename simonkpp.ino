@@ -79,6 +79,69 @@ constexpr byte ENOUGH_GOODIES = 6; // This many start cycles without timeout wil
 
 volatile byte power_skip = 6U;
 volatile byte goodies = 0U;
+
+volatile bool startup = false;
+volatile bool aco_edge_high = false;
+
+
+
+void wait_pwm_running() {
+
+}
+
+void wait_pwm_enable() {
+    if (pwmSetToNop() ) {
+	setPwmToOff();
+	redLedOff();
+    }
+    wait_pwm_running();
+}
+
+void wait_for_edge0() {
+
+}
+
+void wait_for_edge1() {
+
+}
+
+void set_ocr1a_rel(unsigned short Y) {
+
+}
+
+void wait_for_edge() {
+    if (power_skip < 1) { // Are we trying to track a maybe running motor?
+	wait_pwm_enable();
+	return;
+    }
+    // We might be trying to track a maybe running motor.
+    --power_skip;
+    if (!startup) {
+	wait_for_edge0();
+	return;
+    }
+    unsigned short Y = (0xFFU * 0x100U);
+    set_ocr1a_rel(Y);
+    // xl = ZC_CHECK_MIN.
+    wait_for_edge1();
+    return;
+}
+
+void wait_for_low() {
+    aco_edge_high = false;
+    wait_for_edge();
+}
+
+void wait_for_high() {
+    aco_edge_high = true;
+    wait_for_edge();
+}
+
+//  See run1 in simonk source.
+void run() {
+
+}
+
 void startFromRunning() {
     switchPowerOff();
     initComparator();

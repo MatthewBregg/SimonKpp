@@ -162,9 +162,23 @@ void CpFetOn() {
     CPFET_PORT = CPFET_PORT & getByteWithBitCleared(CpFetIdx);
 }
 
+// TODO: Replace with enum.
+volatile byte PWM_STATUS = 0x00;
 // Equivelent setting ZL to pwm_wdr: in simonk, but we aren't yet using a watchdog.
 void setPwmToNop() {
-    // TODO: Implement this, perhaps via an ENUM?
+    PWM_STATUS = 0x00;
+}
+
+void setPwmToOff() {
+    PWM_STATUS = 0x01;
+}
+
+bool pwmSetToNop() {
+    return PWM_STATUS == 0x00;
+}
+
+bool pwmSetToOff() {
+    return PWM_STATUS == 0x01;
 }
 
 // Disable PWM, clear PWM interrupts, stop PWM switching
