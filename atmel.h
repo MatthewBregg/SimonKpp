@@ -164,6 +164,10 @@ void CpFetOn() {
     CPFET_PORT = CPFET_PORT & getByteWithBitCleared(CpFetIdx);
 }
 
+// Motor debug, unimplemented ATM.
+void flagOn() {}
+void flagOff() {}
+
 // TODO: Replace with enum.
 volatile byte PWM_STATUS = 0x00;
 // Equivelent setting ZL to pwm_wdr: in simonk, but we aren't yet using a watchdog.

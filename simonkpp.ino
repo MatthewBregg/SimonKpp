@@ -78,6 +78,7 @@ constexpr byte RCP_TOT = 2U; // Number of 65536us periods before considering rc 
 constexpr byte ENOUGH_GOODIES = 6; // This many start cycles without timeout will transition to running mode (tm4 experimental 05-01-18 - stock 12)
 
 volatile byte power_skip = 6U;
+volatile bool power_on = false;
 volatile byte goodies = 0U;
 
 volatile bool startup = false;
@@ -91,6 +92,45 @@ void set_timing_degrees(byte temp) {}
 void wait_OCT1_tot() {}
 
 void demag_timeout() {}
+
+constexpr unsigned short ZC_CHECK_MIN = 3U;
+constexpr unsigned short ZC_CHECK_FAST = 12U; //  Number of ZC checkloops under which the PWM noise should not matter.
+constexpr unsigned short ZC_CHECK_MAX = POWER_RANGE/32; // Limit ZC checking to about 1/2 PWM interval
+volatile unsigned short timing = 0x00U; // Interval of 2 commutations.
+
+void wait_for_edge_fast() {}
+void wait_for_edge_fast_min() {}
+void wait_for_edge_below_max() {}
+
+void wait_for_edge0() {
+    unsigned short quartered_timing =  timing >> 2;
+    constexpr unsigned short MASKED_ZC_CHECK_MIN = 0x00FFu & ZC_CHECK_MIN;
+    constexpr unsigned short MASKED_ZC_CHECK_MAX = 0x00FFu & ZC_CHECK_MAX;
+    if ( quartered_timing <  MASKED_ZC_CHECK_MIN ) {
+	wait_for_edge_fast_min();
+	return;
+    }
+    if ( quartered_timing == MASKED_ZC_CHECK_MIN ) {
+	wait_for_edge_fast();
+	return;
+    }
+
+    if ( quartered_timing < MASKED_ZC_CHECK_MAX ) {
+	wait_for_edge_below_max();
+	return;
+    }
+
+    // TODO: Make this more efficient?
+    quartered_timing &= 0xFF00;
+    quartered_timing |= MASKED_ZC_CHECK_MAX;
+
+    wait_for_edge_below_max();
+
+}
+
+void wait_for_edge1() {
+
+}
 
 void wait_for_demag() {
     bool opposite_level;
@@ -130,15 +170,6 @@ void wait_pwm_enable() {
     wait_pwm_running();
 }
 
-void wait_for_edge0() {
-
-
-}
-
-void wait_for_edge1() {
-
-}
-
 void set_ocr1a_rel(unsigned short Y) {
 
 }
@@ -176,6 +207,34 @@ void run() {
 
 }
 
+void updateTiming() {};
+
+void wait_commutation() {
+    flagOn();
+    updateTiming();
+    startup = false;
+    wait_OCT1_tot();
+    flagOff();
+
+    if (power_skip != 0x00u) {
+	power_on = false;
+    }
+    // On rc_timeout, immediately restart control.
+    if ( rc_timeout != 0x00u) {
+	// TODO: Risk of stack overflow here eventually if we restart control enough?!
+	restartControl();
+	return;
+    }
+
+
+}
+
+// Leave running mode and update timing/duty.
+void wait_timeout_init() {
+    startup = true;
+    wait_commutation();
+}
+
 void startFromRunning() {
     switchPowerOff();
     initComparator();
@@ -187,6 +246,7 @@ void startFromRunning() {
     // of PWR_MIN_START.
     const byte sys_control_l = (0xFU /* Lol */ & PWR_MIN_START);
     set_duty = true;
+    wait_timeout_init();
 
     // Initialization.
     // TODO: Update this comment to account for new control scheme.
