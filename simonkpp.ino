@@ -69,21 +69,18 @@ ISR(TIMER1_OVF_vect) {
     }
 }
 
-volatile bool setDuty = false;
+volatile bool set_duty = false;
 constexpr unsigned short MIN_DUTY = 56 * cpuMhz/16;
 constexpr unsigned short POWER_RANGE = 1500U * cpuMhz/16 + MIN_DUTY;
 constexpr unsigned short MAX_POWER = POWER_RANGE-1;
 constexpr unsigned short PWR_MIN_START = POWER_RANGE/6;
-void restartControl() {
+constexpr byte RCP_TOT = 2U; // Number of 65536us periods before considering rc pulse lost
+constexpr byte ENOUGH_GOODIES = 6; // This many start cycles without timeout will transition to running mode (tm4 experimental 05-01-18 - stock 12)
+
+volatile byte power_skip = 6U;
+volatile byte goodies = 0U;
+void startFromRunning() {
     switchPowerOff();
-    setDuty = false;
-    greenLedOn();
-    redLedOff();
-    // Idle beeping happened here in simonk.
-    // dib_l/h set here (although not rc_duty?).
-    // YL/rc_duty is set however, which seems to correspond to power?
-    // After a bunch of puls input validation yadda yadda, we get to start_from_running
-    // start_from_running switches power off in the first step, but we aren't going to repeat that.
     initComparator();
     greenLedOff();
     redLedOff();
@@ -92,6 +89,36 @@ void restartControl() {
     // as the above link shows is safe, but avoid a compiler warning by using a bit mask to extract the lower 8 bits
     // of PWR_MIN_START.
     const byte sys_control_l = (0xFU /* Lol */ & PWR_MIN_START);
-    setDuty = true;
+    set_duty = true;
 
+    // Initialization.
+    // TODO: Update this comment to account for new control scheme.
+    // Start with a short timeout to stop quickly
+    // if we see no further pulses after the first.
+    // Do not enable FETs during first cycle to
+    // see if motor is running, and align to it.
+    // If we can follow without a timeout, do not
+    // continue in startup mode (long ZC filtering).
+    // Enable PWM (ZL has been set to pwm_wdr)
+    //
+    // We also set wait_timeout_init, start_delay, start_modulate,
+    // and start_fail to 0x00 in simonK, but don't add them here quite yet...
+    rc_timeout = RCP_TOT;
+    power_skip = 6U;
+    goodies = ENOUGH_GOODIES;
+    enablePwmInterrupt();
+
+}
+
+// Also encapsulates wait_for_power_*
+void restartControl() {
+    switchPowerOff();
+    set_duty = false;
+    greenLedOn();
+    redLedOff();
+    // Idle beeping happened here in simonk.
+    // dib_l/h set here (although not rc_duty?).
+    // YL/rc_duty is set however, which seems to correspond to power?
+    // After a bunch of puls input validation yadda yadda, we get to start_from_running
+    startFromRunning();
 }

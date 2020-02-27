@@ -52,6 +52,13 @@ void enableTimerInterrupts() {
     TIMSK = TIMER_INTERRUPTS_ENABLE; // Enable t1ovfl_int, t1oca_int, t2ovfl_int
 }
 
+// Timer2 is used for PWM, enable it.
+void enablePwmInterrupt() {
+    // Timer2 Control register, start the timer.
+    TCCR2 = T2CLK;
+
+}
+
 void setDefaultRegisterValues() {
     ///////////////////////////////////////////////////
     // Set the I/O registers to safe/default values. //
@@ -155,15 +162,16 @@ void CpFetOn() {
     CPFET_PORT = CPFET_PORT & getByteWithBitCleared(CpFetIdx);
 }
 
-void disablePwmSwitching() {
-    // TODO: IMPLEMENT THIS.
+// Equivelent setting ZL to pwm_wdr: in simonk, but we aren't yet using a watchdog.
+void setPwmToNop() {
+    // TODO: Implement this, perhaps via an ENUM?
 }
 
 // Disable PWM, clear PWM interrupts, stop PWM switching
 void switchPowerOff() {
     TCCR2 = UNSIGNED_ZERO; // Disable PWM interrupts;
     TIFR = getByteWithBitSet(TOV2); // Clear pending PWM interrupts
-    disablePwmSwitching();
+    setPwmToNop();
     // Switch all fets off.
     // Turn off all pFets
     ApFetOn();
