@@ -93,7 +93,8 @@ void wait_OCT1_tot() {}
 void demag_timeout() {}
 
 void wait_for_demag() {
-    while(true) {
+    bool opposite_level;
+    do {
 	// If we don't have an oct1_pending, go to demag_timeout.
 	if (!oct1_pending) {
 	    demag_timeout();
@@ -103,20 +104,11 @@ void wait_for_demag() {
 
 	// XOR the ACO bit in ACSR with aco_edge_high, true if XOR would be 1, false otherwise.
 	// TODO: Clean this up, can probably just do a logical != instead.
-	bool opposite_level /* aka demagnetization */ = (((ACSR | getByteWithBitSet(ACO)) ^
+	opposite_level /* aka demagnetization */ = (((ACSR | getByteWithBitSet(ACO)) ^
 							  (aco_edge_high ? getByteWithBitSet(ACO) : getByteWithBitCleared(ACO))) > 0U);
 
-	if ( HIGH_SIDE_PWM ) {
-	    opposite_level = !opposite_level;
-	}
-
-	// Check for demagnetization;
-	if (opposite_level) {
-	    wait_for_demag();
-	} else {
-	    wait_for_edge0();
-	}
-    }
+    } while(opposite_level != HIGH_SIDE_PWM);  // Check for demagnetization;
+    wait_for_edge0();
 }
 
 void wait_pwm_running() {
