@@ -13,6 +13,8 @@
 
 constexpr byte cpuMhz = 16U;
 
+constexpr bool HIGH_SIDE_PWM = false;
+
 // T0CLK INFO, for TIMER0
 // Set to increment twice an us, sets CS01 on.
 constexpr byte T0CLK = 1U << CS01; // CLK/8 == 2 MHZ.

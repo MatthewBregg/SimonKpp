@@ -83,10 +83,51 @@ volatile byte goodies = 0U;
 volatile bool startup = false;
 volatile bool aco_edge_high = false;
 
+void wait_startup() {
 
+}
+
+void set_timing_degrees(byte temp) {}
+void wait_OCT1_tot() {}
+
+void demag_timeout() {}
+
+void wait_for_demag() {
+    while(true) {
+	// If we don't have an oct1_pending, go to demag_timeout.
+	if (!oct1_pending) {
+	    demag_timeout();
+	    return;
+	}
+	// potentially eval_rc,/set_duty here if we are doing that with our new protocol.
+
+	// XOR the ACO bit in ACSR with aco_edge_high, true if XOR would be 1, false otherwise.
+	// TODO: Clean this up, can probably just do a logical != instead.
+	bool opposite_level /* aka demagnetization */ = (((ACSR | getByteWithBitSet(ACO)) ^
+							  (aco_edge_high ? getByteWithBitSet(ACO) : getByteWithBitCleared(ACO))) > 0U);
+
+	if ( HIGH_SIDE_PWM ) {
+	    opposite_level = !opposite_level;
+	}
+
+	// Check for demagnetization;
+	if (opposite_level) {
+	    wait_for_demag();
+	} else {
+	    wait_for_edge0();
+	}
+    }
+}
 
 void wait_pwm_running() {
+    if ( startup ) {
+	wait_startup();
+    }
+    set_timing_degrees(13U * 256U/120U);
+    wait_OCT1_tot(); // Wait for the minimum blanking period;
+    set_timing_degrees(42U * 256U/120U); // Set timeout for maximum blanking period.
 
+    wait_for_demag();
 }
 
 void wait_pwm_enable() {
@@ -98,6 +139,7 @@ void wait_pwm_enable() {
 }
 
 void wait_for_edge0() {
+
 
 }
 
