@@ -82,6 +82,20 @@ constexpr byte getByteWithBitCleared(byte bitIndex) {
     return ~getByteWithBitSet(bitIndex);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// ;-- Analog comparator sense macros --------------------------------------- //
+// ; We enable and disable the ADC to override ACME when one of the sense     //
+// ; pins is AIN1 instead of an ADC pin. In the future, this will allow	      //
+// ; reading from the ADC at the same time.				      //
+// Analog Comparator Magic: Investigate more later, but for now, just copy    //
+// the bits which get SET.                                                    //
+////////////////////////////////////////////////////////////////////////////////
+void initComparator() {
+    SFIOR = getByteWithBitSet(ACME) | SFIOR; // Set Analog Comparator Multiplexor Enable
+    // Disable ADC to make sure ACME works. Only happens if mux_a and mux_b and mux_c are defined...
+    ADCSRA = ADCSRA & getByteWithBitCleared(ADEN);
+}
+
 /***************************/
 /* Motor Driving Functions */
 /***************************/

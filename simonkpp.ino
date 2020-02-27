@@ -70,9 +70,28 @@ ISR(TIMER1_OVF_vect) {
 }
 
 volatile bool setDuty = false;
+constexpr unsigned short MIN_DUTY = 56 * cpuMhz/16;
+constexpr unsigned short POWER_RANGE = 1500U * cpuMhz/16 + MIN_DUTY;
+constexpr unsigned short MAX_POWER = POWER_RANGE-1;
+constexpr unsigned short PWR_MIN_START = POWER_RANGE/6;
 void restartControl() {
     switchPowerOff();
     setDuty = false;
     greenLedOn();
     redLedOff();
+    // Idle beeping happened here in simonk.
+    // dib_l/h set here (although not rc_duty?).
+    // YL/rc_duty is set however, which seems to correspond to power?
+    // After a bunch of puls input validation yadda yadda, we get to start_from_running
+    // start_from_running switches power off in the first step, but we aren't going to repeat that.
+    initComparator();
+    greenLedOff();
+    redLedOff();
+
+    // We could just truncate, https://www.learncpp.com/cpp-tutorial/unsigned-integers-and-why-to-avoid-them/
+    // as the above link shows is safe, but avoid a compiler warning by using a bit mask to extract the lower 8 bits
+    // of PWR_MIN_START.
+    const byte sys_control_l = (0xFU /* Lol */ & PWR_MIN_START);
+    setDuty = true;
+
 }
