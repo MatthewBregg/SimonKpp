@@ -68,3 +68,11 @@ ISR(TIMER1_OVF_vect) {
 	}
     }
 }
+
+volatile bool setDuty = false;
+void restartControl() {
+    switchPowerOff();
+    setDuty = false;
+    greenLedOn();
+    redLedOff();
+}

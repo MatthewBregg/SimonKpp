@@ -1,3 +1,4 @@
+// For the Arduino IDE, I am using https://github.com/carlosefr/atmega.
 #ifndef ATMEL_H
 #define ATMEL_H
 
@@ -26,6 +27,7 @@ constexpr byte T0CLK = 1U << CS01; // CLK/8 == 2 MHZ.
 constexpr byte T1CLK = 0xC1u;
 constexpr byte T2CLK = 1U << CS20; // (CLK/2) 16 MHZ
 constexpr byte TIMER_INTERRUPTS_ENABLE =  (1U<<TOIE1) | (1U<<OCIE1A) | (1U<<TOIE2);
+constexpr byte UNSIGNED_ZERO = B00000000;
 
 
 void zeroTCNT0() {
@@ -138,6 +140,27 @@ void BpFetOn() {
 void CpFetOn() {
     CPFET_PORT = CPFET_PORT & getByteWithBitCleared(CpFetIdx);
 }
+
+void disablePwmSwitching() {
+    // TODO: IMPLEMENT THIS.
+}
+
+// Disable PWM, clear PWM interrupts, stop PWM switching
+void switchPowerOff() {
+    TCCR2 = UNSIGNED_ZERO; // Disable PWM interrupts;
+    TIFR = getByteWithBitSet(TOV2); // Clear pending PWM interrupts
+    disablePwmSwitching();
+    // Switch all fets off.
+    // Turn off all pFets
+    ApFetOn();
+    BpFetOn();
+    CpFetOn();
+    // Turn off all nFets
+    AnFetOn();
+    BnFetOn();
+    CnFetOn();
+}
+
 
 
 /************************************************************/
