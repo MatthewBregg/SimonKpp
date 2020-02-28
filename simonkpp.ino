@@ -1,5 +1,9 @@
 #include "atmel.h"
+#include "globals.h"
+#include "commutations.h"
+#include "pwm_interrupt.h"
 #include "beep.h"
+#include "pwm_interrupt.h"
 // REMEMBER: VARIABLES BEING set/access from an interrupt must be volatile!
 
 // Afro NFet ESCs have an external 16mhz oscillator.
@@ -28,13 +32,6 @@ void loop() {
     return;
 }
 
-volatile bool oct1_pending = false;
-volatile byte ocr1ax = 0; // third byte of OCR1A.
-volatile byte tcnt1x = 0; // third byte of TCNT1.
-volatile byte rc_timeout = 0;
-volatile byte rct_boot = 0; // Counter which increments while rc_timeout is 0 to jump to boot loader (TODO delete?)
-volatile byte rct_beacon = 0; // Counter which increments while rc_timeout is 0 to disarm and beep occasionally (TODO delete?)
-
 ///////////////////////////////////////////////////////////////////////////////////////
 // Interrupt Documentation							     //
 //    http://ee-classes.usc.edu/ee459/library/documents/avr_intr_vectors/	     //
@@ -43,11 +40,10 @@ volatile byte rct_beacon = 0; // Counter which increments while rc_timeout is 0 
 // https://www.avrfreaks.net/forum/return-statement-isr                              //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Be sure to check interrupt names for the ATMEGA8 here 							     //
-// https://www.nongnu.org/avr-libc/user-manual/group__avr__interrupts.html#gad28590624d422cdf30d626e0a506255f	     //
-// The LEDs can be used to verify an interrupt works				      				     //
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Be sure to check interrupt names for the ATMEGA8 here.
+// https://www.nongnu.org/avr-libc/user-manual/group__avr__interrupts.html#gad28590624d422cdf30d626e0a506255f
+// The LEDs can be used to verify an interrupt works.
 
 // timer1 output compare interrupt
 ISR(TIMER1_COMPA_vect) {
@@ -69,34 +65,12 @@ ISR(TIMER1_OVF_vect) {
     }
 }
 
-volatile bool set_duty = false;
-constexpr unsigned short MIN_DUTY = 56 * cpuMhz/16;
-constexpr unsigned short POWER_RANGE = 1500U * cpuMhz/16 + MIN_DUTY;
-constexpr unsigned short MAX_POWER = POWER_RANGE-1;
-constexpr unsigned short PWR_MIN_START = POWER_RANGE/6;
-constexpr byte RCP_TOT = 2U; // Number of 65536us periods before considering rc pulse lost
-constexpr byte ENOUGH_GOODIES = 6; // This many start cycles without timeout will transition to running mode (tm4 experimental 05-01-18 - stock 12)
-
-volatile byte power_skip = 6U;
-volatile bool power_on = false;
-volatile byte goodies = 0U;
-
-volatile bool startup = false;
-volatile bool aco_edge_high = false;
-
 void wait_startup() {}
 
 void set_timing_degrees(byte temp) {}
 void wait_OCT1_tot() {}
 
 void demag_timeout() {}
-
-constexpr unsigned short ZC_CHECK_MIN = 3U;
-constexpr unsigned short ZC_CHECK_FAST = 12U; //  Number of ZC checkloops under which the PWM noise should not matter.
-constexpr unsigned short ZC_CHECK_MAX = POWER_RANGE/32; // Limit ZC checking to about 1/2 PWM interval
-constexpr unsigned short MASKED_ZC_CHECK_MIN = 0x00FFu & ZC_CHECK_MIN;
-constexpr unsigned short MASKED_ZC_CHECK_MAX = 0x00FFu & ZC_CHECK_MAX;
-volatile unsigned short timing = 0x00U; // Interval of 2 commutations.
 
 void set_ocr1a_zct() {}
 
@@ -162,7 +136,8 @@ void wait_for_edge2(byte quartered_timing_higher, byte quartered_timing_lower) {
 	} else {
 	    --quartered_timing_lower;
 	    if (quartered_timing_lower == 0) {
-		// And then finally done! Return all the way back up through wait_for_edge*
+		// And then finally done! Return all the way back up through
+		// wait_for_edge*
 		wait_commutation();
 		return;
 	    }

@@ -1,8 +1,8 @@
-#include "globals.h"
+#include "esc_config.h"
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Attempt to isolate chip level actions here, with the dream being to swap this file with arm.h, and //
-// the code then compiles for arm.  Currently for a fixed pinout, but will likely be split into	      //
-// architecture.h and pinout.h in the future.							      //
+// the code then compiles for arm.  Currently for a fixed esc_config, but will likely be split into	      //
+// architecture.h and esc_config.h in the future.							      //
 // 												      //
 // Examples: chip related constants like Mhz, configuring timers, setting pins.			      //
 //												      //
@@ -11,16 +11,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef ATMEL_H
 #define ATMEL_H
-
-// Notes: delayMicroseconds is a NOP loop, no interrupts!
-// https://electronics.stackexchange.com/questions/84776/arduino-delaymicroseconds
-// Millis and Micros() both use timer0, whose frequency we clobbered.
-// https://www.best-microcontroller-projects.com/arduino-millis.html
-// https://ucexperiment.wordpress.com/2012/03/17/examination-of-the-arduino-micros-function/
-// We went from a prescaler of 64 to 8, so multiply the output of millis() * 8 and it should be accurate.
-// Micros is overflow count + tcnt0, so will NOT be accurate with that method however!
-// We could however, implement our own micros via using the timer0_overflow_count ourself!
-constexpr byte cpuMhz = 16U;
 
 // T0CLK INFO, for TIMER0
 // Set to increment twice an us, sets CS01 on.
@@ -175,39 +165,15 @@ void CpFetOn() {
 void flagOn() {}
 void flagOff() {}
 
-// Equivelent setting ZL to pwm_wdr: in simonk, but we aren't yet using a watchdog.
-void setPwmToNop() {
-    PWM_STATUS = 0x00;
-}
-
-void setPwmToOff() {
-    PWM_STATUS = 0x01;
-}
-
-bool pwmSetToNop() {
-    return PWM_STATUS == 0x00;
-}
-
-bool pwmSetToOff() {
-    return PWM_STATUS == 0x01;
-}
-
 // Disable PWM, clear PWM interrupts, stop PWM switching
-void switchPowerOff() {
-    TCCR2 = UNSIGNED_ZERO; // Disable PWM interrupts;
-    TIFR = getByteWithBitSet(TOV2); // Clear pending PWM interrupts
-    setPwmToNop();
-    // Switch all fets off.
-    // Turn off all pFets
-    ApFetOn();
-    BpFetOn();
-    CpFetOn();
-    // Turn off all nFets
-    AnFetOn();
-    BnFetOn();
-    CnFetOn();
-}
 
+void disablePWMInterrupts() {
+
+    TCCR2 = UNSIGNED_ZERO; // Disable PWM interrupts;
+}
+void clearPendingPwmInterrupts() {
+    TIFR = getByteWithBitSet(TOV2); // Clear pending PWM interrupts
+}
 
 
 /************************************************************/
