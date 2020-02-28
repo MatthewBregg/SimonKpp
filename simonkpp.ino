@@ -90,8 +90,9 @@ void wait_for_edge2(byte quartered_timing_higher, byte quartered_timing_lower) {
 
 	// XOR the ACO bit in ACSR with aco_edge_high, true if XOR would be 1, false otherwise.
 	// TODO: Clean this up, can probably just do a logical != instead.
-	opposite_level /* aka demagnetization */ = (((ACSR | getByteWithBitSet(ACO)) ^
-							  (aco_edge_high ? getByteWithBitSet(ACO) : getByteWithBitCleared(ACO))) > 0U);
+	/* aka demagnetization */
+	opposite_level = (((ACSR | getByteWithBitSet(ACO)) ^
+			   (aco_edge_high ? getByteWithBitSet(ACO) : getByteWithBitCleared(ACO))) > 0U);
 
 	if (opposite_level == HIGH_SIDE_PWM) {
 	    // cp xl, xh
