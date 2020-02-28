@@ -5,8 +5,8 @@
 
 // Constants
 constexpr bool HIGH_SIDE_PWM = false;
-constexpr unsigned short MIN_DUTY = 56 * cpuMhz/16;
-constexpr unsigned short POWER_RANGE = 1500U * cpuMhz/16 + MIN_DUTY;
+constexpr unsigned short MIN_DUTY = 56 * cpu_mhz/16;
+constexpr unsigned short POWER_RANGE = 1500U * cpu_mhz/16 + MIN_DUTY;
 constexpr unsigned short MAX_POWER = POWER_RANGE-1;
 constexpr unsigned short PWR_MIN_START = POWER_RANGE/6;
 constexpr byte RCP_TOT = 2U; // Number of 65536us periods before considering rc pulse lost

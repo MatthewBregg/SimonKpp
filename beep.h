@@ -6,7 +6,7 @@
 void beep(const byte frequency) {
     zeroTCNT0();
     //beep 1.
-    while ( getTCNT0() < 2*cpuMhz ) {}
+    while ( getTCNT0() < 2*cpu_mhz ) {}
     // Turn off all N side fets.
     AnFetOff();
     BnFetOff();
@@ -15,7 +15,7 @@ void beep(const byte frequency) {
     ApFetOff();
     BpFetOff();
     CpFetOff();
-    for (byte countDown = cpuMhz; countDown != 0; --countDown) {
+    for (byte countDown = cpu_mhz; countDown != 0; --countDown) {
 	// beep 2.
 	zeroTCNT0();
 	// beep 3.

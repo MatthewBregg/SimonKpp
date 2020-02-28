@@ -100,7 +100,7 @@ void run6() {
     if (!power_on && goodies == 0) {
 	// TODO: Risk of stack overflow here eventually if we restart control enough?!
 	// Eventually does it make sense to just make restartControl a loop perhaps?
-	restartControl();
+	restart_control();
 	return;
     }
 
@@ -126,11 +126,11 @@ void run_reverse() {
 
 }
 
-void updateTiming() {};
+void update_timing() {};
 
 void wait_commutation() {
     flagOn();
-    updateTiming();
+    update_timing();
     startup = false;
     wait_OCT1_tot();
     flagOff();
@@ -141,7 +141,7 @@ void wait_commutation() {
     // On rc_timeout, immediately restart control.
     if ( rc_timeout != 0x00u) {
 	// TODO: Risk of stack overflow here eventually if we restart control enough?!
-	restartControl();
+	restart_control();
 	return;
     }
 
@@ -154,7 +154,7 @@ void wait_timeout_init() {
     wait_commutation();
 }
 
-void startFromRunning() {
+void start_from_running() {
     switchPowerOff();
     initComparator();
     greenLedOff();
@@ -187,7 +187,7 @@ void startFromRunning() {
 }
 
 // Also encapsulates wait_for_power_*
-void restartControl() {
+void restart_control() {
     switchPowerOff();
     set_duty = false;
     greenLedOn();
@@ -196,7 +196,7 @@ void restartControl() {
     // dib_l/h set here (although not rc_duty?).
     // YL/rc_duty is set however, which seems to correspond to power?
     // After a bunch of puls input validation yadda yadda, we get to start_from_running
-    startFromRunning();
+    start_from_running();
 }
 
 

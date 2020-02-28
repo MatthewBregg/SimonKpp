@@ -11,6 +11,6 @@
 // We went from a prescaler of 64 to 8, so multiply the output of millis() * 8 and it should be accurate.
 // Micros is overflow count + tcnt0, so will NOT be accurate with that method however!
 // We could however, implement our own micros via using the timer0_overflow_count ourself!
-constexpr byte cpuMhz = 16U;
+constexpr byte cpu_mhz = 16U;
 
 #endif
