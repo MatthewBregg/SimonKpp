@@ -84,9 +84,7 @@ volatile byte goodies = 0U;
 volatile bool startup = false;
 volatile bool aco_edge_high = false;
 
-void wait_startup() {
-
-}
+void wait_startup() {}
 
 void set_timing_degrees(byte temp) {}
 void wait_OCT1_tot() {}
@@ -96,40 +94,86 @@ void demag_timeout() {}
 constexpr unsigned short ZC_CHECK_MIN = 3U;
 constexpr unsigned short ZC_CHECK_FAST = 12U; //  Number of ZC checkloops under which the PWM noise should not matter.
 constexpr unsigned short ZC_CHECK_MAX = POWER_RANGE/32; // Limit ZC checking to about 1/2 PWM interval
+constexpr unsigned short MASKED_ZC_CHECK_MIN = 0x00FFu & ZC_CHECK_MIN;
+constexpr unsigned short MASKED_ZC_CHECK_MAX = 0x00FFu & ZC_CHECK_MAX;
 volatile unsigned short timing = 0x00U; // Interval of 2 commutations.
 
-void wait_for_edge_fast() {}
-void wait_for_edge_fast_min() {}
-void wait_for_edge_below_max() {}
+void set_ocr1a_zct() {}
+
+void wait_for_edge_fast(byte quartered_timing_lower) {
+    set_ocr1a_zct();
+    wait_for_edge1(quartered_timing_lower);
+}
+void wait_for_edge_fast_min() {
+    wait_for_edge_fast(ZC_CHECK_MIN);
+}
+void wait_for_edge_below_max(byte quartered_timing_lower) {
+    if ( quartered_timing_lower < ZC_CHECK_FAST ) {
+	wait_for_edge_fast(quartered_timing_lower);
+	return;
+    }
+    set_timing_degrees(24*256/120);
+    wait_for_edge1(quartered_timing_lower);
+}
 
 void wait_for_edge0() {
     unsigned short quartered_timing =  timing >> 2;
-    constexpr unsigned short MASKED_ZC_CHECK_MIN = 0x00FFu & ZC_CHECK_MIN;
-    constexpr unsigned short MASKED_ZC_CHECK_MAX = 0x00FFu & ZC_CHECK_MAX;
     if ( quartered_timing <  MASKED_ZC_CHECK_MIN ) {
 	wait_for_edge_fast_min();
 	return;
     }
     if ( quartered_timing == MASKED_ZC_CHECK_MIN ) {
-	wait_for_edge_fast();
+	wait_for_edge_fast((0xFFu & quartered_timing));
 	return;
     }
 
     if ( quartered_timing < MASKED_ZC_CHECK_MAX ) {
-	wait_for_edge_below_max();
+	wait_for_edge_below_max((0xFFu & quartered_timing));
 	return;
     }
+    // simonk falls through to wait_for_edge_below_max
+    wait_for_edge_below_max((0xFFu & MASKED_ZC_CHECK_MAX));
+}
 
-    // TODO: Make this more efficient?
-    quartered_timing &= 0xFF00;
-    quartered_timing |= MASKED_ZC_CHECK_MAX;
+void wait_timeout(byte quartered_timing_higher, byte quartered_timing_lower) {}
 
-    wait_for_edge_below_max();
+void wait_for_edge2(byte quartered_timing_higher, byte quartered_timing_lower) {
+    bool opposite_level;
+    do {
+	// If we don't have an oct1_pending, go to demag_timeout.
+	if (!oct1_pending) {
+	    wait_timeout(quartered_timing_higher,quartered_timing_lower);
+	    return;
+	}
+	// potentially eval_rc,/set_duty here if we are doing that with our new protocol.
+	// .if 0 ; Visualize comparator output on the flag pin.
+
+	// XOR the ACO bit in ACSR with aco_edge_high, true if XOR would be 1, false otherwise.
+	// TODO: Clean this up, can probably just do a logical != instead.
+	opposite_level /* aka demagnetization */ = (((ACSR | getByteWithBitSet(ACO)) ^
+							  (aco_edge_high ? getByteWithBitSet(ACO) : getByteWithBitCleared(ACO))) > 0U);
+
+	if (opposite_level == HIGH_SIDE_PWM) {
+	    // cp xl, xh
+	    // adc xl, zh
+	    if (quartered_timing_lower < quartered_timing_higher ) {
+		++quartered_timing_lower;
+	    }
+	} else {
+	    --quartered_timing_lower;
+	    if (quartered_timing_lower == 0) {
+		// And then finally done! Return all the way back up through wait_for_edge*
+		wait_commutation();
+		return;
+	    }
+	}
+
+    } while(true);  // Check for demagnetization;
 
 }
 
-void wait_for_edge1() {
-
+void wait_for_edge1(byte quartered_timing_lower) {
+    wait_for_edge2(quartered_timing_lower,quartered_timing_lower);
 }
 
 void wait_for_demag() {
@@ -170,9 +214,7 @@ void wait_pwm_enable() {
     wait_pwm_running();
 }
 
-void set_ocr1a_rel(unsigned short Y) {
-
-}
+void set_ocr1a_rel(unsigned short Y) {}
 
 void wait_for_edge() {
     if (power_skip < 1) { // Are we trying to track a maybe running motor?
@@ -188,7 +230,7 @@ void wait_for_edge() {
     unsigned short Y = (0xFFU * 0x100U);
     set_ocr1a_rel(Y);
     // xl = ZC_CHECK_MIN.
-    wait_for_edge1();
+    wait_for_edge1(MASKED_ZC_CHECK_MIN);
     return;
 }
 
@@ -203,9 +245,7 @@ void wait_for_high() {
 }
 
 //  See run1 in simonk source.
-void run() {
-
-}
+void run() {}
 
 void updateTiming() {};
 
