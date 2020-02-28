@@ -1,4 +1,14 @@
-// For the Arduino IDE, I am using https://github.com/carlosefr/atmega.
+#include "globals.h"
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Attempt to isolate chip level actions here, with the dream being to swap this file with arm.h, and //
+// the code then compiles for arm.  Currently for a fixed pinout, but will likely be split into	      //
+// architecture.h and pinout.h in the future.							      //
+// 												      //
+// Examples: chip related constants like Mhz, configuring timers, setting pins.			      //
+//												      //
+// For the Arduino IDE, I am using https://github.com/carlosefr/atmega.                               //
+//												      //
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef ATMEL_H
 #define ATMEL_H
 
@@ -10,10 +20,7 @@
 // We went from a prescaler of 64 to 8, so multiply the output of millis() * 8 and it should be accurate.
 // Micros is overflow count + tcnt0, so will NOT be accurate with that method however!
 // We could however, implement our own micros via using the timer0_overflow_count ourself!
-
 constexpr byte cpuMhz = 16U;
-
-constexpr bool HIGH_SIDE_PWM = false;
 
 // T0CLK INFO, for TIMER0
 // Set to increment twice an us, sets CS01 on.
@@ -164,12 +171,10 @@ void CpFetOn() {
     CPFET_PORT = CPFET_PORT & getByteWithBitCleared(CpFetIdx);
 }
 
-// Motor debug, unimplemented ATM.
+// Motor debug output, unimplemented ATM.
 void flagOn() {}
 void flagOff() {}
 
-// TODO: Replace with enum.
-volatile byte PWM_STATUS = 0x00;
 // Equivelent setting ZL to pwm_wdr: in simonk, but we aren't yet using a watchdog.
 void setPwmToNop() {
     PWM_STATUS = 0x00;
