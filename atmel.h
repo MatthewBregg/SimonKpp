@@ -165,6 +165,9 @@ void CpFetOn() {
 void flagOn() {}
 void flagOff() {}
 
+void sync_on() {}
+void sync_off() {}
+
 // Disable PWM, clear PWM interrupts, stop PWM switching
 
 void disablePWMInterrupts() {

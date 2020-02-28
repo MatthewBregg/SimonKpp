@@ -4,6 +4,8 @@
 #include "interrupts.h"
 #include "beep.h"
 // REMEMBER: VARIABLES BEING set/access from an interrupt must be volatile!
+// Big TODO: Move into proper .cc/.h files, and INLINE the world. I can use -Winline to make not inlining a warning.
+
 
 // Afro NFet ESCs have an external 16mhz oscillator.
 // We are disregarding the bootloader, and will be using USBASP.
@@ -93,8 +95,36 @@ void wait_for_high() {
     wait_for_edge();
 }
 
+void run6() {
+    // IF last commutation timed out and power is off, return to restart control
+    if (!power_on && goodies == 0) {
+	// TODO: Risk of stack overflow here eventually if we restart control enough?!
+	// Eventually does it make sense to just make restartControl a loop perhaps?
+	restartControl();
+	return;
+    }
+
+}
+
 //  See run1 in simonk source.
-void run() {}
+void run_reverse() {
+    wait_for_low();
+    com1com6();
+    sync_on();
+    wait_for_high();
+    com6com5();
+    wait_for_low();
+    com5com4();
+    wait_for_high();
+    com4com3();
+    sync_off();
+    wait_for_low();
+    com3com2();
+    wait_for_high();
+    com2com1();
+    run6();
+
+}
 
 void updateTiming() {};
 
