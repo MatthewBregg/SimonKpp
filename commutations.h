@@ -23,7 +23,10 @@ void pwm_focus_b_off() {};
 void pwm_focus_b_on() {};
 void pwm_focus_a_off() {};
 void pwm_focus_a_on() {};
+// END focus function block
 
+// Below: Lots of duplicated pwm control code, duplicated per each FET.
+// TODO(Bregg): Clean up.
 // Skip setting A if we didn't change the port in copy_from.
 // Otherwise, change a.
 void pwm_a_copy(const OrigPortNewPortVal copy_from) {
@@ -71,18 +74,6 @@ OrigPortNewPortVal pwm_c_clear() {
     return OrigPortNewPortVal(orig_port_value, new_port_value);
 }
 
-// An on, Cn off
-void com1com6() {
-    set_comp_phase_c();
-    cli();
-    all_fets = false;
-    a_fet = true;
-    pwm_focus_c_off();
-    pwm_a_copy(pwm_c_clear());
-    pwm_focus_a_on();
-    sei();
-}
-
 // Commutation drive macros. All this duplicated code will be cleaned one day...
 void commutate_a_off() {
     if ( HIGH_SIDE_PWM ) { AnFetOff(); } else { ApFetOff(); }
@@ -108,6 +99,18 @@ void commutate_c_on() {
     if ( HIGH_SIDE_PWM ) { CnFetOn(); } else { CpFetOn(); }
 }
 
+// An on, Cn off
+void com1com6() {
+    set_comp_phase_c();
+    cli();
+    all_fets = false;
+    a_fet = true;
+    pwm_focus_c_off();
+    pwm_a_copy(pwm_c_clear());
+    pwm_focus_a_on();
+    sei();
+}
+
 // Cp on, Bp off.
 void com6com5() {
     set_comp_phase_b();
@@ -117,10 +120,41 @@ void com6com5() {
     }
 
 }
-void com5com4() {}
-void com4com3() {}
-void com3com2() {}
-void com2com1() {}
+// Bn on, An off
+void com5com4() {
+    set_comp_phase_a();
+    cli();
+    all_fets = false;
+    b_fet = true;
+    pwm_focus_a_off();
+    pwm_b_copy(pwm_a_clear());
+    pwm_focus_b_on();
+    sei();
+}
+
+// Ap on, Cp off
+void com4com3() {
+    set_comp_phase_c();
+    commutate_c_off();
+    if (power_on) {
+	commutate_a_on();
+    }
+
+}
+// Cn on, Bn off
+void com3com2() {
+    set_comp_phase_b();
+    cli();
+    all_fets = false;
+    c_fet = true;
+    pwm_focus_b_off();
+    pwm_c_copy(pwm_b_clear());
+    pwm_focus_c_on();
+    sei();
+}
+void com2com1() {
+
+}
 
 
 #endif
