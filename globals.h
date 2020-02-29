@@ -51,4 +51,10 @@ volatile byte power_skip = 6U;
 volatile byte goodies = 0U;
 volatile unsigned short timing = 0x00U; // Interval of 2 commutations.
 
+// FET STATUS
+volatile bool all_fets = false;
+volatile bool a_fet = false;
+volatile bool b_fet = false;
+volatile bool c_fet = false;
+
 #endif

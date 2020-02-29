@@ -2,6 +2,16 @@
 #define ESC_CONFIG_H
 
 
+// Pinout ports
+#define ANFET_PORT PORTD
+#define BNFET_PORT PORTD
+#define CNFET_PORT PORTD
+#define APFET_PORT PORTD
+#define BPFET_PORT PORTB
+#define CPFET_PORT PORTB
+
+
+
 // Mux config Bools
 constexpr bool mux_a_defined = true;
 constexpr bool mux_b_defined = true;

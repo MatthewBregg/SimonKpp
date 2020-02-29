@@ -169,12 +169,12 @@ constexpr byte ApFetIdx = 2;
 constexpr byte BpFetIdx = 2;
 constexpr byte CpFetIdx = 1;
 
-#define ANFET_PORT PORTD
-#define BNFET_PORT PORTD
-#define CNFET_PORT PORTD
-#define APFET_PORT PORTD
-#define BPFET_PORT PORTB
-#define CPFET_PORT PORTB
+
+// In high_side PWM mode, add code to make these be XpFET_PORT.
+#define PWM_A_PORT_IN ANFET_PORT
+#define PWM_B_PORT_IN BNFET_PORT
+#define PWM_C_PORT_IN CNFET_PORT
+
 
 // xNFets are active high.
 void AnFetOn() {
