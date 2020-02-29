@@ -156,7 +156,7 @@ void wait_timeout_init() {
 
 void start_from_running() {
     switchPowerOff();
-    initComparator();
+    init_comparator();
     greenLedOff();
     redLedOff();
 

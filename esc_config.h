@@ -2,6 +2,14 @@
 #define ESC_CONFIG_H
 
 
+// Mux config Bools
+constexpr bool mux_a_defined = true;
+constexpr bool mux_b_defined = true;
+constexpr bool mux_c_defined = false;
+
+constexpr byte admux_bitmask_to_enable_mux_a = 0x00U;
+constexpr byte admux_bitmask_to_enable_mux_b = 0x01U;
+constexpr byte admux_bitmask_to_enable_mux_c = 0x07U;
 
 // Notes: delayMicroseconds is a NOP loop, no interrupts!
 // https://electronics.stackexchange.com/questions/84776/arduino-delaymicroseconds

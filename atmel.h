@@ -96,10 +96,67 @@ constexpr byte getByteWithBitCleared(byte bitIndex) {
 // Analog Comparator Magic: Investigate more later, but for now, just copy    //
 // the bits which get SET.                                                    //
 ////////////////////////////////////////////////////////////////////////////////
-void initComparator() {
+void init_comparator() {
     SFIOR = getByteWithBitSet(ACME) | SFIOR; // Set Analog Comparator Multiplexor Enable
-    // Disable ADC to make sure ACME works. Only happens if mux_a and mux_b and mux_c are defined...
-    ADCSRA = ADCSRA & getByteWithBitCleared(ADEN);
+
+    if ( mux_a_defined && mux_b_defined && mux_c_defined) {
+	// Disable ADC to make sure ACME works. Only happens if mux_a and mux_b and mux_c are defined...
+	ADCSRA = ADCSRA & getByteWithBitCleared(ADEN);
+    }
+}
+
+void comp_adc_enable() {
+    ADCSRA = ADCSRA | getByteWithBitSet(ADEN);
+}
+
+void comp_adc_disable() {
+    // If any muxes are undefined, this must be ran.
+    // If no muxes use the AIN1 pin, then we will never have set ADEN
+    // to read AIN1, and this doesn't need to be ran.
+    // Otherwise, we are trying to read an ADC 0-7, so make sure
+    // the mux is enabled by clearing ADEN, which might have been set
+    // during an earlier read involving the AIN1 mux (in afro_nfets, mux_c).
+    if ( !mux_a_defined || !mux_b_defined || !mux_c_defined) {
+	ADCSRA = ADCSRA & getByteWithBitCleared(ADEN);
+    }
+}
+
+// Set the ADC to compare against phase x.
+void set_comp_phase_a() {
+    if (mux_a_defined) {
+	// Set comparator multiplexer to phase a.
+	ADMUX = admux_bitmask_to_enable_mux_a;
+	// If we disabled the mux to read AIN1 (in afro_nfet, mux_c is on ain1),
+	// then disable the ADC here, which re-enables the mux.
+	comp_adc_disable();
+    } else {
+	comp_adc_enable();
+    }
+}
+
+void set_comp_phase_b() {
+    if (mux_b_defined) {
+	// Set comparator multiplexer to phase a.
+	ADMUX = admux_bitmask_to_enable_mux_b;
+	// If we disabled the mux to read AIN1 (in afro_nfet, mux_c is on ain1),
+	// then disable the ADC here, which re-enables the mux.
+	comp_adc_disable();
+    } else {
+	comp_adc_enable();
+    }
+}
+
+// Mux C is `undefined` and set to AIN1 on afros_nfe, so we enable the ADC here!
+void set_comp_phase_c() {
+    if (mux_c_defined) {
+	// Set comparator multiplexer to phase a.
+	ADMUX = admux_bitmask_to_enable_mux_c;
+	// If we disabled the mux to read AIN1 (in afro_nfet, mux_c is on ain1),
+	// then disable the ADC here, which re-enables the mux.
+	comp_adc_disable();
+    } else {
+	comp_adc_enable();
+    }
 }
 
 /***************************/

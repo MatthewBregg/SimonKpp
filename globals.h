@@ -3,6 +3,8 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+// SimonK tuning notes: http://torukmakto4.blogspot.com/2018/05/project-t19-part-12-flywheel-drive.html
+
 // Constants
 constexpr bool HIGH_SIDE_PWM = false;
 constexpr unsigned short MIN_DUTY = 56 * cpu_mhz/16;
@@ -45,6 +47,7 @@ volatile bool aco_edge_high = false;
 
 // Motor timing information.
 volatile byte power_skip = 6U;
+// Goodies: Amount of Good zero-cross detections, good commutations, that's all.
 volatile byte goodies = 0U;
 volatile unsigned short timing = 0x00U; // Interval of 2 commutations.
 
