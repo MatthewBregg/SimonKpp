@@ -71,6 +71,7 @@ OrigPortNewPortVal pwm_c_clear() {
     return OrigPortNewPortVal(orig_port_value, new_port_value);
 }
 
+// An on, Cn off
 void com1com6() {
     set_comp_phase_c();
     cli();
@@ -81,7 +82,41 @@ void com1com6() {
     pwm_focus_a_on();
     sei();
 }
-void com6com5() {}
+
+// Commutation drive macros. All this duplicated code will be cleaned one day...
+void commutate_a_off() {
+    if ( HIGH_SIDE_PWM ) { AnFetOff(); } else { ApFetOff(); }
+}
+
+void commutate_a_on() {
+    if ( HIGH_SIDE_PWM ) { AnFetOn(); } else { ApFetOn(); }
+}
+
+void commutate_b_off() {
+    if ( HIGH_SIDE_PWM ) { BnFetOff(); } else { BpFetOff(); }
+}
+
+void commutate_b_on() {
+    if ( HIGH_SIDE_PWM ) { BnFetOn(); } else { BpFetOn(); }
+}
+
+void commutate_c_off() {
+    if ( HIGH_SIDE_PWM ) { CnFetOff(); } else { CpFetOff(); }
+}
+
+void commutate_c_on() {
+    if ( HIGH_SIDE_PWM ) { CnFetOn(); } else { CpFetOn(); }
+}
+
+// Cp on, Bp off.
+void com6com5() {
+    set_comp_phase_b();
+    commutate_b_off();
+    if (power_on) {
+	commutate_c_on();
+    }
+
+}
 void com5com4() {}
 void com4com3() {}
 void com3com2() {}
