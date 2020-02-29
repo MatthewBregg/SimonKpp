@@ -152,8 +152,14 @@ void com3com2() {
     pwm_focus_c_on();
     sei();
 }
-void com2com1() {
 
+// Bp on, Ap off
+void com2com1() {
+    set_comp_phase_a();
+    commutate_a_off();
+    if ( power_on ) {
+	commutate_b_on();
+    }
 }
 
 
