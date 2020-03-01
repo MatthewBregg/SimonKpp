@@ -36,7 +36,13 @@ void loop() {
 void wait_startup() {}
 
 void set_timing_degrees(byte temp) {}
-void wait_OCT1_tot() {}
+void wait_OCT1_tot() {
+    do {
+	// Potentially eval_rc, if the EVAL_RC flag is set.
+	// if (eval_rc) { evaluate_rc(); }
+    } while(oct1_pending); // Wait for commutation_time,
+    // an interrupt will eventually flip this, t1oca_int:.
+}
 
 void demag_timeout() {
     pwmSetToNop(); // Stop PWM switching, interrupts will not turn on any fets now!
