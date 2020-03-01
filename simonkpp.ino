@@ -56,7 +56,33 @@ void demag_timeout() {
     return;
 }
 
-void set_ocr1a_zct() {}
+void set_ocr1a_abs_fast(const unsigned short y) {
+    const byte ocf1a_mask = (1 << OCF1A);
+    cli();
+    OCR1A = y;
+    TIFR = ocf1a_mask; // Clear any pending OCF1A interrupt.
+    const unsigned short tcnt1_in = TCNT1;
+    oct1_pending = true;
+    ocr1ax = 0x00U;
+    sei();
+    if (y >= tcnt1_in) {
+	return;
+    }
+    oct1_pending = false;
+    return;
+
+}
+
+void set_ocr1a_zct_slow() {};
+
+void set_ocr1a_zct() {
+    if ( slow_cpu && timing_fast ) {
+	unsigned short y = com_timing + 2*timing;
+	set_ocr1a_abs_fast(y);
+    } else {
+	set_ocr1a_zct_slow();
+    }
+}
 
 
 void wait_timeout(byte quartered_timing_higher, byte quartered_timing_lower) {}

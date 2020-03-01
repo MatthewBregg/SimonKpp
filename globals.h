@@ -44,12 +44,15 @@ volatile bool set_duty = false;
 volatile bool power_on = false;
 volatile bool startup = false;
 volatile bool aco_edge_high = false;
+volatile bool timing_fast = false; // Does timing fit in 16 bits?
 
 // Motor timing information.
 volatile byte power_skip = 6U;
 // Goodies: Amount of Good zero-cross detections, good commutations, that's all.
 volatile byte goodies = 0U;
+// Both of these are 24 bits in simonk with _x, we will need to bitmask for the fast methods.
 volatile unsigned short timing = 0x00U; // Interval of 2 commutations.
+volatile unsigned short com_timing = 0x00U; // time of last commutation.
 
 // FET STATUS
 volatile bool all_fets = false;
