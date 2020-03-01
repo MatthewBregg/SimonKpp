@@ -30,6 +30,7 @@ void setup() {
 void loop() {
     enableTimerInterrupts();
     sei();
+    set_ocr1a_rel(millis(), 0x00u);
     return;
 }
 
@@ -83,7 +84,28 @@ void wait_pwm_enable() {
     wait_pwm_running();
 }
 
-void set_ocr1a_rel(unsigned short Y) {}
+void set_ocr1a_rel(unsigned short Y, const byte temp7) {
+    // Compensate for timer increment durring in-add-out
+    // TODO(bregg): Uhoh, this sounds very, very implementation/ASM specific, lol.
+    // Might be a pain with compiled code, will port as is for now, and see about a better solution later.
+    // Perhaps check assembly, although that will be a PITA.
+    // See https://forum.arduino.cc/index.php?topic=50169.0
+    Y+=7; // Manually counted, held at 7 for now!
+    // Isn't OCF1A constant? Can I just combine these?
+    // Oh, I need to load OCF1A into a register before I can out it, which is why temp4 is used.
+    // Leave for now, as we want to load OCF1A into the register first anyway, although I don't think the compiler
+    // needs to respect that wish, so might need to get tweaked anyway based on code generated.
+    // TLDR; I'll need to comback to this.
+    const byte ocf1a_bitmask = (1 << OCF1A); // A
+    cli(); // B
+    Y+=TCNT1; // C // Registers 0xF7/ and 0xFF?
+    OCR1A = Y; // D
+    TIFR = ocf1a_bitmask; // clear any pending interrupts, ideally, this should be 7 cycles from the earlier TCNT1 read.
+    ocr1ax = temp7; // E
+    oct1_pending = true; // F
+    sei(); // G
+    return;
+}
 
 void wait_for_low() {
     aco_edge_high = false;
@@ -293,7 +315,7 @@ void wait_for_edge() {
 	return;
     }
     unsigned short Y = (0xFFU * 0x100U);
-    set_ocr1a_rel(Y);
+    set_ocr1a_rel(Y, 0x00U);
     // xl = ZC_CHECK_MIN.
     wait_for_edge1(MASKED_ZC_CHECK_MIN);
     return;
