@@ -30,7 +30,6 @@ void setup() {
 void loop() {
     enableTimerInterrupts();
     sei();
-    set_ocr1a_rel(millis(), 0x00u);
     return;
 }
 
@@ -39,7 +38,17 @@ void wait_startup() {}
 void set_timing_degrees(byte temp) {}
 void wait_OCT1_tot() {}
 
-void demag_timeout() {}
+void demag_timeout() {
+    pwmSetToNop(); // Stop PWM switching, interrupts will not turn on any fets now!
+    pwm_all_off();
+    redLedOn();
+    // Skip power for the next commutation. Note that this
+    // won't decrease a non-zero powerskip because demag
+    // checking is skipped when powerskip is non-zero.
+    power_skip = 1;
+    wait_commutation();
+    return;
+}
 
 void set_ocr1a_zct() {}
 

@@ -16,6 +16,15 @@ public:
     }
 };
 
+
+void pwm_all_off() {
+    if (HIGH_SIDE_PWM) {
+	allPFetsOff();
+    } else {
+	allNFetsOff();
+    }
+}
+
 // These *FOCUS* functions do nothing with comp_pwm disabled
 void pwm_focus_c_off() {};
 void pwm_focus_c_on() {};

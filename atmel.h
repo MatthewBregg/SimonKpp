@@ -218,6 +218,18 @@ void CpFetOn() {
     CPFET_PORT = CPFET_PORT & getByteWithBitCleared(CpFetIdx);
 }
 
+void allPFetsOff() {
+    ApFetOff();
+    BpFetOff();
+    CpFetOff();
+}
+
+void allNFetsOff() {
+    AnFetOff();
+    BnFetOff();
+    CnFetOff();
+}
+
 // Motor debug output, unimplemented ATM.
 void flagOn() {}
 void flagOff() {}
