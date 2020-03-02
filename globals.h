@@ -22,6 +22,10 @@ constexpr unsigned short ZC_CHECK_MAX = POWER_RANGE/32; // Limit ZC checking to 
 constexpr unsigned short MASKED_ZC_CHECK_MIN = 0x00FFu & ZC_CHECK_MIN;
 constexpr unsigned short MASKED_ZC_CHECK_MAX = 0x00FFu & ZC_CHECK_MAX;
 
+constexpr uint32_t START_DELAY_US = 0x00u; // Initial post-commutation wait during starting
+constexpr uint32_t START_DSTEP_US = 8; // Microseconds per start delay step
+constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC during starting
+
 
 // PWM Related
 
@@ -62,5 +66,8 @@ volatile bool all_fets = false;
 volatile bool a_fet = false;
 volatile bool b_fet = false;
 volatile bool c_fet = false;
+
+// Startup vars
+volatile byte start_delay = 0x00u;
 
 #endif

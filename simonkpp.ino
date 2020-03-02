@@ -33,8 +33,11 @@ void loop() {
     return;
 }
 
-void wait_startup() {}
-
+void set_ocr1a_rel(const uint32_t timing) {
+    const byte upper = (timing >> 16) & 0xFFu;
+    const unsigned short lower = (timing & 0xFFFFu);
+    set_ocr1a_rel(lower, upper);
+}
 
 uint32_t update_timing_add_degrees(uint32_t local_timing, uint32_t local_com_time, const byte degree /* temp4 */) {
     // I'm probably seeing the forest for the trees.
@@ -42,6 +45,24 @@ uint32_t update_timing_add_degrees(uint32_t local_timing, uint32_t local_com_tim
     uint32_t new_com_timing = timing*((uint32_t)degree);
     return ((new_com_timing >> 8) & 0xFFFFFFu) + local_com_time;
 }
+
+void wait_startup() {
+    uint32_t new_timing = START_DELAY_US * ((uint32_t) cpu_mhz);
+    if ( goodies >= 2 ) {
+	const byte degrees = start_delay;
+	const uint32_t start_destep_micros_clock_cycles = START_DELAY_US * ((uint32_t) cpu_mhz) * 0x100u;
+	new_timing = update_timing_add_degrees(start_destep_micros_clock_cycles, new_timing, degrees);
+    }
+    set_ocr1a_rel(new_timing);
+    wait_OCT1_tot();
+    const uint32_t timeout_cycles = TIMEOUT_START * ((uint32_t) cpu_mhz);
+    set_ocr1a_rel(timeout_cycles);
+
+   // Powered startup: Use a fixed (long) ZC check count until goodies reaches
+   // ENOUGH_GOODIES and the STARTUP flag is cleared.
+    wait_for_edge1(0xFFu * (cpu_mhz/16));
+}
+
 
 uint32_t set_timing_degrees_slow(const byte degree /* temp4 */) {
     // Loads 24 bits of com_time into y/tmp7, and 24 bits of timing into temp1-3.
