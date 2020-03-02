@@ -57,7 +57,7 @@ void demag_timeout() {
 }
 
 void set_ocr1a_abs_fast(const unsigned short y) {
-    const byte ocf1a_mask = (1 << OCF1A);
+    const byte ocf1a_mask = getByteWithBitSet(OCF1A);
     cli();
     OCR1A = y;
     TIFR = ocf1a_mask; // Clear any pending OCF1A interrupt.
@@ -73,11 +73,66 @@ void set_ocr1a_abs_fast(const unsigned short y) {
 
 }
 
-void set_ocr1a_zct_slow() {};
+
+// Set OCT1_PENDING until the absolute time specified by YL:YH:temp7 passes.
+// Returns current TCNT1(L:H:X) value in temp1:temp2:temp3.
+//
+// tcnt1x may not be updated until many instructions later, even with
+// interrupts enabled, because the AVR always executes one non-interrupt
+// instruction between interrupts, and several other higher-priority
+// interrupts may (have) come up. So, we must save tcnt1x and TIFR with
+// interrupts disabled, then do a correction.
+//
+// New timing = y/temp7.
+//
+// Potential bug source, this function is REALLY tricky!
+// Wait, are we sure that tcnt1x and co should be unsigned actually?
+// I might need to look into signed/unsigned subtraction...
+void set_ocr1a_abs_slow(const uint32_t new_timing) {
+    const byte original_timsk = TIMSK;
+    // Temp. disable TOIE1 and OCIE1A
+    TIMSK = TIMSK & getByteWithBitCleared(TOIE1) & getByteWithBitCleared(OCIE1A);
+    const byte ocf1a_mask = getByteWithBitSet(OCF1A);
+    cli();
+    OCR1A = 0x0000FFFFu & new_timing;
+    TIFR = ocf1a_mask; // Clear any pending OCF1A interrupts.
+    const unsigned short tcnt1_in = TCNT1;
+    sei();
+    oct1_pending = true;
+
+    byte tcnt1x_copy = tcnt1x;
+    const byte tifr_orig = TIFR;
+
+    // Question: I can't figure out what the point of cpi temp2, 0x80 is here, so I gave up.
+    // OH, it sets the fucking carry for the following possibly adc instruction!!!!!
+    const bool carry = (((tcnt1_in) >> 8 & 0x00FFu) < 0x80u);
+    if ( carry && ((tifr_orig & getByteWithBitSet(TOV1)) != 0x00U)) {
+	++tcnt1x_copy;
+    }
+
+    // Lots of tricky 8bit->24bit->32bit conversion here, hopefully nothing is bugged, or too slow.
+    const uint32_t tcnt1_combined = ((uint32_t)tcnt1x_copy << 16) | (uint32_t)tcnt1_in;
+
+    ocr1ax = (((new_timing - tcnt1_combined) & 0xFF000000u) >> 16) & 0x000000FFu;
+
+    if (new_timing >= tcnt1_combined) {
+	TIMSK = original_timsk;
+	return;
+    }
+    oct1_pending = false;
+    TIMSK = original_timsk;
+    return;
+}
+
+void set_ocr1a_zct_slow() {
+    // Loads 24 bits of com_time into y/tmp7, and 24 bits of timing into temp1-3.
+    set_ocr1a_abs_slow(timing*2 + com_timing);
+    return;
+}
 
 void set_ocr1a_zct() {
     if ( slow_cpu && timing_fast ) {
-	unsigned short y = com_timing + 2*timing;
+	unsigned short y = ((unsigned short)com_timing) + 2*((unsigned short)timing);
 	set_ocr1a_abs_fast(y);
     } else {
 	set_ocr1a_zct_slow();
@@ -137,7 +192,7 @@ void set_ocr1a_rel(unsigned short Y, const byte temp7) {
     // Leave for now, as we want to load OCF1A into the register first anyway, although I don't think the compiler
     // needs to respect that wish, so might need to get tweaked anyway based on code generated.
     // TLDR; I'll need to comback to this.
-    const byte ocf1a_bitmask = (1 << OCF1A); // A
+    const byte ocf1a_bitmask = getByteWithBitSet(OCF1A); // A
     cli(); // B
     Y+=TCNT1; // C // Registers 0xF7/ and 0xFF?
     OCR1A = Y; // D

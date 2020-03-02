@@ -51,8 +51,11 @@ volatile byte power_skip = 6U;
 // Goodies: Amount of Good zero-cross detections, good commutations, that's all.
 volatile byte goodies = 0U;
 // Both of these are 24 bits in simonk with _x, we will need to bitmask for the fast methods.
-volatile unsigned short timing = 0x00U; // Interval of 2 commutations.
-volatile unsigned short com_timing = 0x00U; // time of last commutation.
+// Making these 32 bit might not be as efficient, but using 3 bytes is stupid messy,
+// and coercing the compiler to actually make a 24 bit int type seems tricky, so...
+// This is a problem that won't exist on a 32 bit platform anywho.
+volatile  uint32_t timing = 0x00U; // Interval of 2 commutations.
+volatile uint32_t com_timing = 0x00U; // time of last commutation.
 
 // FET STATUS
 volatile bool all_fets = false;
