@@ -35,7 +35,51 @@ void loop() {
 
 void wait_startup() {}
 
-void set_timing_degrees(byte temp) {}
+
+uint32_t update_timing_add_degrees(uint32_t local_timing, uint32_t local_com_time, const byte degree /* temp4 */) {
+    // I'm probably seeing the forest for the trees.
+    // TODO(bregg): Look at this again.
+    uint32_t new_com_timing = timing*((uint32_t)degree);
+    return ((new_com_timing >> 8) & 0xFFFFFFu) + local_com_time;
+}
+
+uint32_t set_timing_degrees_slow(const byte degree /* temp4 */) {
+    // Loads 24 bits of com_time into y/tmp7, and 24 bits of timing into temp1-3.
+    return update_timing_add_degrees(timing, com_timing, degree);
+
+}
+
+
+
+byte get_low(const unsigned short in) {
+    return 0xFFu & in;
+}
+
+byte get_high(const unsigned short in) {
+    return (0xFF00u & in) >> 8;
+}
+
+// Should this be returning the new com_time perhaps?
+// Another scary and tricky and bug prone function?
+void set_timing_degrees(const byte degree /* temp4 */) {
+    if ( slow_cpu && timing_fast ) {
+
+	// WTF is this? Is this just normal 16x16 multiplication? Need to play around with this,
+	// I'm probably seeing the forest for the trees.
+	// TODO(bregg): Look at this again.
+	const unsigned short timing_low_degree_product =
+	    ((unsigned short)get_low(timing)) * ((unsigned short)degree);
+	const unsigned short timing_high_degree_product =
+	    ((unsigned short)get_high(timing)) * ((unsigned short)degree);
+	unsigned short new_com_timing = (com_timing & 0xFFFFu) + get_high(timing_low_degree_product);
+	new_com_timing += timing_high_degree_product;
+	set_ocr1a_abs_fast(new_com_timing);
+    } else {
+	uint32_t new_timing = set_timing_degrees_slow(degree);
+	set_ocr1a_abs_slow(new_timing);
+    }
+
+}
 void wait_OCT1_tot() {
     do {
 	// Potentially eval_rc, if the EVAL_RC flag is set.
@@ -130,6 +174,7 @@ void set_ocr1a_zct_slow() {
     return;
 }
 
+// Should his be returning the new com time perhaps?
 void set_ocr1a_zct() {
     if ( slow_cpu && timing_fast ) {
 	unsigned short y = ((unsigned short)com_timing) + 2*((unsigned short)timing);
