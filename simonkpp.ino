@@ -206,7 +206,18 @@ void set_ocr1a_zct() {
 }
 
 
-void wait_timeout(byte quartered_timing_higher, byte quartered_timing_lower) {}
+void wait_timeout_init() {
+    startup = true;
+    return wait_commutation();
+}
+
+// We need a separate wait_timeout init FYI!
+void wait_timeout(byte quartered_timing_higher, byte quartered_timing_lower) {
+    if (!startup) {
+
+    }
+
+}
 
 void wait_for_demag() {
     bool opposite_level;
