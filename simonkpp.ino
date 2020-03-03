@@ -43,6 +43,9 @@ void set_ocr1a_rel(const uint32_t timing) {
 // Temp4: DEgrees
 // 1/2/3: timing_l
 // y/7: com_time.
+// For a quick'n'dirty check that this code did what I think, and what the simonk comment says
+// (which hopefully is what this actually does in simonk!!!), I wrote/ran
+// https://pastebin.com/eVc0asJa
 uint32_t update_timing_add_degrees(uint32_t local_timing, uint32_t local_com_time, const byte degree /* temp4 */) {
     // I'm probably seeing the forest for the trees.
     // TODO(bregg): Look at this again.
