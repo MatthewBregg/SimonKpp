@@ -23,6 +23,7 @@ constexpr unsigned short MASKED_ZC_CHECK_MIN = 0x00FFu & ZC_CHECK_MIN;
 constexpr unsigned short MASKED_ZC_CHECK_MAX = 0x00FFu & ZC_CHECK_MAX;
 
 constexpr uint32_t START_DELAY_US = 0x00u; // Initial post-commutation wait during starting
+constexpr uint32_t START_DELAY_INC = 15; // Wait step count increase (wraps in a byte)
 constexpr uint32_t START_DSTEP_US = 8; // Microseconds per start delay step
 constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC during starting
 

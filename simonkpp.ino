@@ -206,17 +206,54 @@ void set_ocr1a_zct() {
 }
 
 
+void wait_timeout_start() {
+    goodies = 0x00u; // Clear good commutation count.
+
+    // Increase the start (blanking) delay unless we are running.
+    if (startup) {
+	start_delay += START_DELAY_INC;
+    }
+    wait_timeout_init();
+    return;
+}
+
+// Leave running mode and update timing/duty.
 void wait_timeout_init() {
     startup = true;
-    return wait_commutation();
+    wait_commutation();
+    return;
+}
+
+void wait_timeout_run() {
+    redLedOn();
+    wait_timeout_start();
+}
+
+void wait_timeout1(byte quartered_timing_higher, byte quartered_timing_lower) {
+    set_ocr1a_zct();
+    wait_for_edge2(quartered_timing_higher,quartered_timing_lower);
+    return;
 }
 
 // We need a separate wait_timeout init FYI!
 void wait_timeout(byte quartered_timing_higher, byte quartered_timing_lower) {
-    if (!startup) {
-
+    if (startup) {
+	wait_timeout_start();
+	return;
     }
-
+    if ( quartered_timing_higher < ZC_CHECK_FAST ) {
+	wait_timeout_run();
+	return;
+    }
+    quartered_timing_higher = (ZC_CHECK_FAST - 1);
+    // Limit back tracking
+    if ( quartered_timing_lower >= quartered_timing_higher ) {
+	wait_timeout1(quartered_timing_higher,quartered_timing_lower);
+	return;
+    }
+    // Intentionally passing lower both times.
+    wait_timeout1(quartered_timing_lower,quartered_timing_lower); // Clip current distance from crossing.
+    return;
 }
 
 void wait_for_demag() {
@@ -341,12 +378,6 @@ void wait_commutation() {
     }
 
 
-}
-
-// Leave running mode and update timing/duty.
-void wait_timeout_init() {
-    startup = true;
-    wait_commutation();
 }
 
 void start_from_running() {
