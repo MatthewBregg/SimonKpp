@@ -46,7 +46,7 @@ void set_ocr1a_rel(const uint32_t timing) {
 uint32_t update_timing_add_degrees(uint32_t local_timing, uint32_t local_com_time, const byte degree /* temp4 */) {
     // I'm probably seeing the forest for the trees.
     // TODO(bregg): Look at this again.
-    uint32_t new_com_timing = timing*((uint32_t)degree);
+    uint32_t new_com_timing = local_timing*((uint32_t)degree);
     return ((new_com_timing >> 8) & 0xFFFFFFu) + local_com_time;
 }
 
