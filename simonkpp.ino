@@ -39,6 +39,10 @@ void set_ocr1a_rel(const uint32_t timing) {
     set_ocr1a_rel(lower, upper);
 }
 
+// Also careful, inputs are oh god, 1,2,3, 4, y/temp7.
+// Temp4: DEgrees
+// 1/2/3: timing_l
+// y/7: com_time.
 uint32_t update_timing_add_degrees(uint32_t local_timing, uint32_t local_com_time, const byte degree /* temp4 */) {
     // I'm probably seeing the forest for the trees.
     // TODO(bregg): Look at this again.
@@ -50,7 +54,7 @@ void wait_startup() {
     uint32_t new_timing = START_DELAY_US * ((uint32_t) cpu_mhz);
     if ( goodies >= 2 ) {
 	const byte degrees = start_delay;
-	const uint32_t start_destep_micros_clock_cycles = START_DELAY_US * ((uint32_t) cpu_mhz) * 0x100u;
+	const uint32_t start_destep_micros_clock_cycles = START_DSTEP_US * ((uint32_t) cpu_mhz) * 0x100u;
 	new_timing = update_timing_add_degrees(start_destep_micros_clock_cycles, new_timing, degrees);
     }
     set_ocr1a_rel(new_timing);
