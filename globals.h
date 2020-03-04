@@ -32,7 +32,11 @@ constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC duri
 
 // The PWM interrupt uses this byte to determine which action to take.
 // TODO: Replace with enum.
-volatile byte PWM_STATUS = 0x00;
+enum PWM_STATUS_ENUM { PWM_NOP = 0x00, PWM_OFF = 0x01, PWM_ON = 0x02, PWM_ON_FAST = 0x03, PWM_ON_FAST_HIGH = 0x04, PWM_ON_HIGH = 0x05 };
+volatile PWM_STATUS_ENUM PWM_STATUS = PWM_NOP;
+// This looks to be set as part of eval RC, so make sure this happens!
+// AKA, I need to run set_new_duty!!
+volatile PWM_STATUS_ENUM PWM_ON_PTR = PWM_NOP;
 
 // Timer related
 volatile bool oct1_pending = false;

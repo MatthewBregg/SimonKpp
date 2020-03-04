@@ -12,19 +12,19 @@
 
 // Equivelent setting ZL to pwm_wdr: in simonk, but we aren't yet using a watchdog.
 void setPwmToNop() {
-    PWM_STATUS = 0x00;
+    PWM_STATUS = PWM_NOP;
 }
 
 void setPwmToOff() {
-    PWM_STATUS = 0x01;
+    PWM_STATUS = PWM_OFF;
 }
 
 bool pwmSetToNop() {
-    return PWM_STATUS == 0x00;
+    return PWM_STATUS == PWM_NOP;
 }
 
 bool pwmSetToOff() {
-    return PWM_STATUS == 0x01;
+    return PWM_STATUS == PWM_OFF;
 }
 
 
