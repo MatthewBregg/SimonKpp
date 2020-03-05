@@ -10,6 +10,10 @@
 /* Timer2 Interrpts: PWM Interrupts */
 /************************************/
 
+void setPwmToOn() {
+    PWM_STATUS = PWM_ON;
+}
+
 // Equivelent setting ZL to pwm_wdr: in simonk, but we aren't yet using a watchdog.
 void setPwmToNop() {
     PWM_STATUS = PWM_NOP;
@@ -26,6 +30,83 @@ bool pwmSetToNop() {
 bool pwmSetToOff() {
     return PWM_STATUS == PWM_OFF;
 }
+
+// Actual PWM interrupt bodies.
+
+// Copying the comment from simonk.
+/*****************************************************************************/
+/* ; Timer2 overflow interrupt (output PWM) -- the interrupt vector actually */
+/* ; "ijmp"s to Z, which should point to one of these entry points.	     */
+/* ;									     */
+/* ; We try to avoid clobbering (and thus needing to save/restore) flags;    */
+/* ; in, out, mov, ldi, cpse, etc. do not modify any flags, while dec does.  */
+/* ;									     */
+/* ; We used to check the comparator (ACSR) here to help starting, since PWM */
+/* ; switching is what introduces noise that affects the comparator result.  */
+/* ; However, timing of this is very sensitive to FET characteristics, and   */
+/* ; would work well on some boards but not at all on others without waiting */
+/* ; another 100-200ns, which was enough to break other boards. So, instead, */
+/* ; we do all of the ACSR sampling outside of the interrupt and do digital  */
+/* ; filtering. The AVR interrupt overhead also helps to shield the noise.   */
+/* ;									     */
+/* ; We reload TCNT2 as the very last step so as to reduce PWM dead areas    */
+/* ; between the reti and the next interrupt vector execution, which still   */
+/* ; takes a good 4 (reti) + 4 (interrupt call) + 2 (ijmp) cycles. We also   */
+/* ; try to keep the switch on close to the start of pwm_on and switch off   */
+/* ; close to the end of pwm_aff to minimize the power bump at full power.   */
+/* ;									     */
+/* ; pwm_*_high and pwm_again are called when the particular on/off cycle    */
+/* ; is longer than will fit in 8 bits. This is tracked in tcnt2h.	     */
+/*****************************************************************************/
+
+void pwm_a_on() {}
+void pwm_b_on() {}
+void pwm_c_on() {}
+
+void pwm_on_high() {
+    --tcnt2h;
+    if ( tcnt2h != 0) {
+	return;
+    }
+    setPwmToOn();
+    return;
+}
+
+
+void pwm_on_fast_high() {
+    pwm_on_high();
+    return;
+}
+
+void pwm_again() {
+    --tcnt2h;
+    return;
+}
+
+void pwm_on_fast() {
+    if (a_fet) {
+	pwm_a_on();
+    }
+    if (b_fet) {
+	pwm_b_on();
+    }
+    if (c_fet) {
+	pwm_c_on();
+    }
+    setPwmToOff();
+    // Now reset the '16' bit timer2 to duty
+    // H is the high byte
+    tcnt2h = ((0xFF00u & duty) >> 8);
+    // L is the low byte.
+    TCNT2 = (0xFFu & duty);
+    return;
+}
+
+void pwm_on() {
+    pwm_on_fast();
+    return;
+}
+
 
 
 // Disable PWM interrupts and turn off all FETS.

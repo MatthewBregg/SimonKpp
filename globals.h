@@ -30,6 +30,17 @@ constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC duri
 
 // PWM Related
 
+// Uhoh, these are 1s complement?!
+// This is tricky. TODO(bregg): Potential bugs here...
+// Based on comments in set_new_duty21, it looks like
+// this the input is ones complemented, and then stored in here for up counting tcnt2.
+// Therefore, leave this unsigned, and just be VERY careful that I keep those com instructions in!!
+//
+// Oh, I think I get it.  duty is how long we don't want to be doing X for in the period.
+// IE, [ X X Y Y Y ], so we invert, do count down how many times we want to do Y,
+// and then finish the period and reset?
+volatile uint16_t duty = 0;	//   on duty cycle, one's complement
+
 // The PWM interrupt uses this byte to determine which action to take.
 // TODO: Replace with enum.
 enum PWM_STATUS_ENUM { PWM_NOP = 0x00, PWM_OFF = 0x01, PWM_ON = 0x02, PWM_ON_FAST = 0x03, PWM_ON_FAST_HIGH = 0x04, PWM_ON_HIGH = 0x05 };
@@ -42,6 +53,7 @@ volatile PWM_STATUS_ENUM PWM_ON_PTR = PWM_NOP;
 volatile bool oct1_pending = false;
 volatile byte ocr1ax = 0; // third byte of OCR1A.
 volatile byte tcnt1x = 0; // third byte of TCNT1.
+volatile byte tcnt2h = 0; // 2nd byte of tcnt2.
 
 // RC Timeout values
 volatile byte rc_timeout = 0;
