@@ -42,8 +42,18 @@ constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC duri
 volatile uint16_t duty = 0;	//   on duty cycle, one's complement
 
 // The PWM interrupt uses this byte to determine which action to take.
-// TODO: Replace with enum.
-enum PWM_STATUS_ENUM { PWM_NOP = 0x00, PWM_OFF = 0x01, PWM_ON = 0x02, PWM_ON_FAST = 0x03, PWM_ON_FAST_HIGH = 0x04, PWM_ON_HIGH = 0x05 };
+// Why an enum and not a function pointer? An enum should be 8 bits,
+// and therefore loaded/mutated atomically, but a function pointer
+// in AVR will be 16, so I then need to worry about ZL/ZH being out of sync.
+// Then again, maybe I should just use the atomic type?
+enum PWM_STATUS_ENUM {
+    PWM_NOP = 0x00,
+    PWM_OFF = 0x01,
+    PWM_ON = 0x02,
+    PWM_ON_FAST = 0x03,
+    PWM_ON_FAST_HIGH = 0x04,
+    PWM_ON_HIGH = 0x05
+};
 volatile PWM_STATUS_ENUM PWM_STATUS = PWM_NOP;
 // This looks to be set as part of eval RC, so make sure this happens!
 // AKA, I need to run set_new_duty!!
