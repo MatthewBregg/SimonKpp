@@ -46,7 +46,7 @@ volatile uint16_t duty = 0;	//   on duty cycle, one's complement
 // and therefore loaded/mutated atomically, but a function pointer
 // in AVR will be 16, so I then need to worry about ZL/ZH being out of sync.
 // Then again, maybe I should just use the atomic type?
-enum PWM_STATUS_ENUM {
+enum PWM_STATUS_ENUM : byte {
     PWM_NOP = 0x00,
     PWM_OFF = 0x01,
     PWM_ON = 0x02,
