@@ -59,9 +59,49 @@ bool pwmSetToOff() {
 /* ; is longer than will fit in 8 bits. This is tracked in tcnt2h.	     */
 /*****************************************************************************/
 
-void pwm_a_on() {}
-void pwm_b_on() {}
-void pwm_c_on() {}
+void pwm_a_on() {
+    if (HIGH_SIDE_PWM) {
+	ApFetOn();
+    } else {
+	AnFetOn();
+    }
+}
+void pwm_b_on() {
+    if (HIGH_SIDE_PWM) {
+	BpFetOn();
+    } else {
+	BnFetOn();
+    }
+}
+void pwm_c_on() {
+    if (HIGH_SIDE_PWM) {
+	CpFetOn();
+    } else {
+	CnFetOn();
+    }
+}
+
+void pwm_a_off() {
+    if (HIGH_SIDE_PWM) {
+	ApFetOff();
+    } else {
+	AnFetOff();
+    }
+}
+void pwm_b_off() {
+    if (HIGH_SIDE_PWM) {
+	BpFetOff();
+    } else {
+	BnFetOff();
+    }
+}
+void pwm_c_off() {
+    if (HIGH_SIDE_PWM) {
+	CpFetOff();
+    } else {
+	CnFetOff();
+    }
+}
 
 void pwm_on_high() {
     --tcnt2h;
