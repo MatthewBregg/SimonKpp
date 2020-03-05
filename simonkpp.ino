@@ -117,7 +117,7 @@ void wait_OCT1_tot() {
 }
 
 void demag_timeout() {
-    pwmSetToNop(); // Stop PWM switching, interrupts will not turn on any fets now!
+    isPwmSetToNop(); // Stop PWM switching, interrupts will not turn on any fets now!
     pwm_all_off();
     redLedOn();
     // Skip power for the next commutation. Note that this
@@ -294,7 +294,7 @@ void wait_pwm_running() {
 }
 
 void wait_pwm_enable() {
-    if (pwmSetToNop() ) {
+    if (isPwmSetToNop() ) {
 	setPwmToOff();
 	redLedOff();
     }

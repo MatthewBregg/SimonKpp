@@ -23,11 +23,11 @@ void setPwmToOff() {
     PWM_STATUS = PWM_OFF;
 }
 
-bool pwmSetToNop() {
+bool isPwmSetToNop() {
     return PWM_STATUS == PWM_NOP;
 }
 
-bool pwmSetToOff() {
+bool isPwmSetToOff() {
     return PWM_STATUS == PWM_OFF;
 }
 
