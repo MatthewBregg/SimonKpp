@@ -27,6 +27,9 @@ constexpr uint32_t START_DELAY_INC = 15; // Wait step count increase (wraps in a
 constexpr uint32_t START_DSTEP_US = 8; // Microseconds per start delay step
 constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC during starting
 
+constexpr unsigned DEAD_TIME_LOW = 0x00;
+constexpr unsigned short EXTRA_DEAD_TIME_LOW = (DEAD_TIME_LOW > 9 ? DEAD_TIME_LOW - 9 : 0);
+
 
 // PWM Related
 
@@ -40,12 +43,19 @@ constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC duri
 // IE, [ X X Y Y Y ], so we invert, do count down how many times we want to do Y,
 // and then finish the period and reset?
 volatile uint16_t duty = 0;	//   on duty cycle, one's complement
+volatile uint16_t off_duty = 0;	//   on duty cycle, one's complement
 
 // The PWM interrupt uses this byte to determine which action to take.
 // Why an enum and not a function pointer? An enum should be 8 bits,
 // and therefore loaded/mutated atomically, but a function pointer
 // in AVR will be 16, so I then need to worry about ZL/ZH being out of sync.
 // Then again, maybe I should just use the atomic type?
+// Update: This looks slow as fuck based on godbolt.
+// It's compiling to a series of cpi/breqs.
+// Solution: Function pointer, wrap the sets in SEI/CLI.
+// Very in depth solution: Go and ensure that these PWM functions are in the lower 8 bits
+// for the function pointer, and then only set that half. But that's tricky and bug prone,
+// and I'd rather just use a slower ut functional solution until the migration to a 32 bit platform.
 enum PWM_STATUS_ENUM : byte {
     PWM_NOP = 0x00,
     PWM_OFF = 0x01,
@@ -73,6 +83,7 @@ volatile byte rct_beacon = 0; // Counter which increments while rc_timeout is 0 
 // Motor Driving flags
 volatile bool set_duty = false;
 volatile bool power_on = false;
+volatile bool full_power = false;
 volatile bool startup = false;
 volatile bool aco_edge_high = false;
 volatile bool timing_fast = false; // Does timing fit in 16 bits?

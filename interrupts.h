@@ -147,6 +147,33 @@ void pwm_on() {
     return;
 }
 
+void pwm_off() {
+    if ( tcnt2h != 0 ) {
+	pwm_again();
+	return;
+    }
+    if ( full_power ) {
+	pwm_on(); // If full power, simply jump to keeping PWM_ON.
+	return;
+    }
+    PWM_STATUS = PWM_ON_PTR;
+    tcnt2h = ((off_duty & 0xFF00) >> 8);
+
+    // Turn fets off now.
+    // Offset by a few cycles, but should be equal on time.
+    if (a_fet) {
+	pwm_a_off();
+    }
+    if (b_fet) {
+	pwm_b_off();
+    }
+    if (c_fet) {
+	pwm_c_off();
+    }
+    TCNT2 = (off_duty & 0xFF);
+}
+
+
 
 
 // Disable PWM interrupts and turn off all FETS.
