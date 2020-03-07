@@ -171,6 +171,8 @@ void pwm_off() {
 	pwm_c_off();
     }
     TCNT2 = (off_duty & 0xFF);
+    // Only COMP_PWM stuff beyond this point!
+    return;
 }
 
 
