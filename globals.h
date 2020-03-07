@@ -26,6 +26,10 @@ constexpr uint32_t START_DELAY_US = 0x00u; // Initial post-commutation wait duri
 constexpr uint32_t START_DELAY_INC = 15; // Wait step count increase (wraps in a byte)
 constexpr uint32_t START_DSTEP_US = 8; // Microseconds per start delay step
 constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC during starting
+constexpr uint32_t TIMING_MAX = 0x0080u; // ; Fixed or safety governor (no less than 0x0080, 321500eRPM).
+
+// Non Constants
+uint16_t safety_governor = 0x00FFu;
 
 // PWM Related
 
@@ -70,6 +74,8 @@ volatile bool oct1_pending = false;
 volatile byte ocr1ax = 0; // third byte of OCR1A.
 volatile byte tcnt1x = 0; // third byte of TCNT1.
 volatile byte tcnt2h = 0; // 2nd byte of tcnt2.
+volatile uint32_t last_tcnt1 = 0x00u; // Last Timer1 value.
+volatile uint32_t last2_tcnt1 = 0x00u; // Last last Timer1 value.
 
 // RC Timeout values
 volatile byte rc_timeout = 0;
@@ -94,6 +100,9 @@ volatile byte goodies = 0U;
 // This is a problem that won't exist on a 32 bit platform anywho.
 volatile  uint32_t timing = 0x00U; // Interval of 2 commutations.
 volatile uint32_t com_timing = 0x00U; // time of last commutation.
+
+
+volatile uint16_t sys_control = 0x00u; // duty limit
 
 // FET STATUS
 volatile bool all_fets = false;

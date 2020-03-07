@@ -33,6 +33,14 @@ void loop() {
     return;
 }
 
+byte get_low(const unsigned short in) {
+    return 0xFFu & in;
+}
+
+byte get_high(const unsigned short in) {
+    return (0xFF00u & in) >> 8;
+}
+
 void set_ocr1a_rel(const uint32_t timing) {
     const byte upper = (timing >> 16) & 0xFFu;
     const unsigned short lower = (timing & 0xFFFFu);
@@ -75,16 +83,6 @@ uint32_t set_timing_degrees_slow(const byte degree /* temp4 */) {
     // Loads 24 bits of com_time into y/tmp7, and 24 bits of timing into temp1-3.
     return update_timing_add_degrees(timing, com_timing, degree);
 
-}
-
-
-
-byte get_low(const unsigned short in) {
-    return 0xFFu & in;
-}
-
-byte get_high(const unsigned short in) {
-    return (0xFF00u & in) >> 8;
 }
 
 // Should this be returning the new com_time perhaps?
@@ -365,7 +363,73 @@ void run_reverse() {
 
 }
 
-void update_timing() {};
+// Time for the dragon: UPDATE TIMING.
+void update_timing() {
+    cli(); // Disable interrupts
+    // LOADING TIME:
+    // Load TCNT1L -> temp1.
+    // Load TCNT1H into temp2
+    // Load tcnt1x -> temp3.
+    // Load TIFR into temp4
+    unsigned short tcnt1_copy = TCNT1;
+    byte tcnt1x_copy = tcnt1x;
+    byte tifr_copy = TIFR;
+    // We've loaded our values without worrying about interrupts,
+    // now re-enable interrupts.
+    sei();
+    // Is TCNT1h set? Then tcnt1x is right, no need to increment.
+    // Otherwise, if TOV1 was/is pending, increment our copy of tcnt1x.
+    if ( 0x80u > get_high(tcnt1_copy) && ((tifr_copy & TOV1) != 0x00u)) {
+	++tcnt1x_copy;
+    }
+    // Calculate the timing from the last two zero_crossings.
+    // Yl/h/temp7 is now last_tcnt1.
+    //
+    // Take a copy of last_tcnt1 before we clobber it.
+    const uint32_t last_tcnt1_copy = last_tcnt1;
+    // Clobber our original last_tcnt1.
+    last_tcnt1 = (((uint32_t)tcnt1x_copy) << 16) | (tcnt1_copy);
+
+    // temp5/6/4 is now last2_tcnt1.
+    const uint32_t last2_tcnt1_copy = last2_tcnt1;
+    // Clobber our original last2_tcnt1 with our original last_tcnt1.
+    last2_tcnt1 = last_tcnt1_copy;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // ; Cancel DC bias by starting our timing from the average of the	  //
+    // ; last two zero-crossings. Commutation phases always alternate.	  //
+    // ; Next start = (cur(c) - last2(a)) / 2 + last(b)			  //
+    // ; -> start=(c-b+(c-a)/2)/2+b						  //
+    // ;									  //
+    // ;                  (c - a)						  //
+    // ;         (c - b + -------)						  //
+    // ;                     2						  //
+    // ; start = ----------------- + b					  //
+    // ;                 2							  //
+    ////////////////////////////////////////////////////////////////////////////
+
+    // TLDR: Subtract our full 24bit copy of tcnt1x/TCNT1H/TCNT1L - last2_tcnt1_copy.
+    uint32_t tcnt1_and_x_copy =  ((((uint32_t)tcnt1x_copy) << 16) | (tcnt1_copy)) - last2_tcnt1_copy;
+
+    if ( tcnt1_and_x_copy < (TIMING_MAX * cpu_mhz/2) ) {
+	// We've reached timing_max, divide sys_control by 2 and go to update_timing1.
+	tcnt1_and_x_copy = (TIMING_MAX * cpu_mhz/2);
+	sys_control /= 2;
+	update_timing1();
+	return;
+    }
+    // Otherwise repeat the above check with our governor.
+    // service_governor:
+    if ( tcnt1_and_x_copy < safety_governor  ) {
+	// We've reached out safety governer, divide sys_control by 2 and go to update_timing1.
+	tcnt1_and_x_copy = safety_governor;
+	sys_control /= 2;
+    }
+    update_timing1();
+    return;
+}
+
+void update_timing1() {}
 
 void wait_commutation() {
     flagOn();
