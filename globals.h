@@ -27,16 +27,6 @@ constexpr uint32_t START_DELAY_INC = 15; // Wait step count increase (wraps in a
 constexpr uint32_t START_DSTEP_US = 8; // Microseconds per start delay step
 constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC during starting
 
-
-//  Low-side dead time w/COMP_PWM (62.5ns steps @ 16MHz, max 2437ns)
-constexpr double DEAD_LOW_NS = 1000;
-// High-side dead time w/COMP_PWM (62.5ns steps @ 16MHz, max roughly PWM period)
-constexpr double DEAD_HIGH_NS = 1000;
-constexpr unsigned DEAD_TIME_LOW = DEAD_LOW_NS * cpu_mhz/((double)1000);
-constexpr unsigned DEAD_TIME_HIGH = DEAD_HIGH_NS * cpu_mhz/((double)1000);
-constexpr unsigned short EXTRA_DEAD_TIME_LOW = (DEAD_TIME_LOW > 9 ? DEAD_TIME_LOW - 9 : 0);
-
-
 // PWM Related
 
 // Uhoh, these are 1s complement?!
