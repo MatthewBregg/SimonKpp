@@ -822,9 +822,9 @@ void start_from_running() {
     // If we can follow without a timeout, do not
     // continue in startup mode (long ZC filtering).
     // Enable PWM (ZL has been set to pwm_wdr)
-    //
-    // We also set wait_timeout_init, start_delay, start_modulate,
-    // and start_fail to 0x00 in simonK, but don't add them here quite yet...
+    start_delay = 0;
+    start_modulate = 0;
+    start_fail  = 0;
     rc_timeout = RCP_TOT;
     power_skip = 6U;
     goodies = ENOUGH_GOODIES;
