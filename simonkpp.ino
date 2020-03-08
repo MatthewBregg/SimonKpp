@@ -668,10 +668,7 @@ void start_from_running() {
     greenLedOff();
     redLedOff();
 
-    // We could just truncate, https://www.learncpp.com/cpp-tutorial/unsigned-integers-and-why-to-avoid-them/
-    // as the above link shows is safe, but avoid a compiler warning by using a bit mask to extract the lower 8 bits
-    // of PWR_MIN_START.
-    const byte sys_control_l = (0xFU /* Lol */ & PWR_MIN_START);
+    sys_control = PWR_MIN_START;
     set_duty = true;
     wait_timeout_init();
 
