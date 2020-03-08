@@ -278,8 +278,41 @@ void wait_timeout(byte quartered_timing_higher, byte quartered_timing_lower) {
     return;
 }
 
-void wait_for_demag() {
+void wait_for_edge2(byte quartered_timing_higher, byte quartered_timing_lower) {
     bool opposite_level;
+    do {
+	// If OCT1_pending, we need to go to wait_timeout.
+	if (!oct1_pending) {
+	    wait_timeout(quartered_timing_higher,quartered_timing_lower);
+	    return;
+	}
+	// potentially eval_rc,/set_duty here if we are doing that with our new protocol.
+	// .if 0 ; Visualize comparator output on the flag pin.
+
+	opposite_level = (aco_edge_high && (ACSR & getByteWithBitSet(ACO)));
+
+	if (opposite_level != HIGH_SIDE_PWM) {
+	    // cp xl, xh
+	    // adc xl, zh
+	    if (quartered_timing_lower < quartered_timing_higher ) {
+		++quartered_timing_lower;
+	    }
+	} else {
+	    --quartered_timing_lower;
+	    if (quartered_timing_lower == 0) {
+		// And then finally done! Return all the way back up through
+		// wait_for_edge*
+		wait_commutation();
+		return;
+	    }
+	}
+
+    } while(true);  // Check for demagnetization;
+
+}
+
+
+void wait_for_demag() {
     do {
 	// If we don't have an oct1_pending, go to demag_timeout.
 	if (!oct1_pending) {
@@ -287,13 +320,7 @@ void wait_for_demag() {
 	    return;
 	}
 	// potentially eval_rc,/set_duty here if we are doing that with our new protocol.
-
-	// XOR the ACO bit in ACSR with aco_edge_high, true if XOR would be 1, false otherwise.
-	// TODO: Clean this up, can probably just do a logical != instead.
-	opposite_level /* aka demagnetization */ = (((ACSR | getByteWithBitSet(ACO)) ^
-							  (aco_edge_high ? getByteWithBitSet(ACO) : getByteWithBitCleared(ACO))) > 0U);
-
-    } while(opposite_level != HIGH_SIDE_PWM);  // Check for demagnetization;
+    } while((aco_edge_high && (ACSR & getByteWithBitSet(ACO))) != HIGH_SIDE_PWM);  // Check for demagnetization;
     wait_for_edge0();
 }
 
@@ -421,10 +448,6 @@ void run_reverse() {
 	    // TODO: Risk of stack overflow here eventually if we restart control enough?!
 	    // Eventually does it make sense to just make restartControl a loop perhaps?
 	    // Can we replace this with a break perhaps?
-	    while(true) {
-		// For now, catch the overflow here.
-		redLedOn();
-	    }
 	    restart_control();
 	    return;
 	}
@@ -814,7 +837,7 @@ void start_from_running() {
 void restart_control() {
     switchPowerOff();
     set_duty = false;
-    rc_duty_set(0x00);
+    rc_duty_set(MAX_POWER/4);
     greenLedOn();
     redLedOff();
     // Idle beeping happened here in simonk.
@@ -864,43 +887,6 @@ void wait_for_edge0() {
     }
     // simonk falls through to wait_for_edge_below_max
     wait_for_edge_below_max((0xFFu & MASKED_ZC_CHECK_MAX));
-}
-
-void wait_for_edge2(byte quartered_timing_higher, byte quartered_timing_lower) {
-    bool opposite_level;
-    do {
-	// If OCT1_pending, we need to go to wait_timeout.
-	if (!oct1_pending) {
-	    wait_timeout(quartered_timing_higher,quartered_timing_lower);
-	    return;
-	}
-	// potentially eval_rc,/set_duty here if we are doing that with our new protocol.
-	// .if 0 ; Visualize comparator output on the flag pin.
-
-	// XOR the ACO bit in ACSR with aco_edge_high, true if XOR would be 1, false otherwise.
-	// TODO: Clean this up, can probably just do a logical != instead.
-	/* aka demagnetization */
-	opposite_level = (((ACSR | getByteWithBitSet(ACO)) ^
-			   (aco_edge_high ? getByteWithBitSet(ACO) : getByteWithBitCleared(ACO))) > 0U);
-
-	if (opposite_level == HIGH_SIDE_PWM) {
-	    // cp xl, xh
-	    // adc xl, zh
-	    if (quartered_timing_lower < quartered_timing_higher ) {
-		++quartered_timing_lower;
-	    }
-	} else {
-	    --quartered_timing_lower;
-	    if (quartered_timing_lower == 0) {
-		// And then finally done! Return all the way back up through
-		// wait_for_edge*
-		wait_commutation();
-		return;
-	    }
-	}
-
-    } while(true);  // Check for demagnetization;
-
 }
 
 void wait_for_edge1(byte quartered_timing_lower) {
