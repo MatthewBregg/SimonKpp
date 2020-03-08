@@ -32,6 +32,7 @@ void loop() {
     sei();
     // Delay before starting the fight!
     delay(2000);
+    //redLedOff();
     restart_control();
     return;
 }
@@ -382,7 +383,7 @@ void run6_3(uint16_t sys_control_copy, uint16_t local_max_power) {
 }
 
 //  See run1 in simonk source.
-// TODO: Rename this to run, place the wait_for_low9) ... com2com1()
+// TODO: Rename this to run, place the wait_for_low() ... com2com1()
 // under a bool reverse and add the run_forward function in also!
 void run_reverse() {
     while ( true ) {
@@ -408,6 +409,10 @@ void run_reverse() {
 	    // TODO: Risk of stack overflow here eventually if we restart control enough?!
 	    // Eventually does it make sense to just make restartControl a loop perhaps?
 	    // Can we replace this with a break perhaps?
+	    while(true) {
+		// For now, catch the overflow here.
+		redLedOn();
+	    }
 	    restart_control();
 	    return;
 	}
@@ -750,7 +755,7 @@ void wait_commutation() {
 	power_on = false;
     }
     // On rc_timeout, immediately restart control.
-    if ( rc_timeout != 0x00u) {
+    if ( rc_timeout == 0x00u) {
 	// TODO: Risk of stack overflow here eventually if we restart control enough?!
 	restart_control();
 	return;
@@ -763,7 +768,6 @@ void start_from_running() {
     // Not quite where we run rc_duty_set normally,
     // but should be fine to drop it in here for now!
     rc_duty_set(MAX_POWER);
-
     switchPowerOff();
     init_comparator();
     greenLedOff();
@@ -789,16 +793,12 @@ void start_from_running() {
     power_skip = 6U;
     goodies = ENOUGH_GOODIES;
     enablePwmInterrupt();
-
     run_reverse();
 }
 
 // Also encapsulates wait_for_power_*
 void restart_control() {
     switchPowerOff();
-    while(true) {
-	    greenLedOn();
-    }
     set_duty = false;
     rc_duty_set(0x00);
     greenLedOn();

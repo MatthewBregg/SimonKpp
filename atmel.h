@@ -24,7 +24,7 @@ constexpr byte T0CLK = 1U << CS01; // CLK/8 == 2 MHZ.
 // input capture register (ICR1), which can then be used in the ISR to measure the prior/next pulse.
 // EX: Clear TCNT1 on the rising edge, and then measure on the known to be coming falling edge.
 constexpr byte T1CLK = 0xC1u;
-constexpr byte T2CLK = 1U << CS20; // (CLK/2) 16 MHZ
+constexpr byte T2CLK = 1U << CS20; // (CLK/1) 16 MHZ
 constexpr byte TIMER_INTERRUPTS_ENABLE =  (1U<<TOIE1) | (1U<<OCIE1A) | (1U<<TOIE2);
 constexpr byte UNSIGNED_ZERO = B00000000;
 
