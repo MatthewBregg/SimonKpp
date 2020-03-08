@@ -14,6 +14,7 @@ constexpr unsigned short PWR_MAX_RPM1 = (POWER_RANGE/6); //  Power limit when ru
 constexpr unsigned short MAX_POWER = POWER_RANGE-1;
 constexpr unsigned short PWR_MIN_START = POWER_RANGE/6; // Power limit while starting (to start)
 constexpr unsigned short PWR_MAX_START = POWER_RANGE/6; // Power limit while starting (if still not running)
+constexpr unsigned short PWR_COOL_START = (POWER_RANGE/24); // Power limit while starting to reduce heating
 // 8192us per commutation
 constexpr uint16_t TIMING_MIN = 0x8000;
  // tm4 change - start ramping duty earlier due to less PWR_MAX_RPM1 (stock 0x4000 - 4096us per commutation)
@@ -37,6 +38,9 @@ constexpr unsigned short MASKED_ZC_CHECK_MAX = 0x00FFu & ZC_CHECK_MAX;
 constexpr uint32_t START_DELAY_US = 0x00u; // Initial post-commutation wait during starting
 constexpr uint32_t START_DELAY_INC = 15; // Wait step count increase (wraps in a byte)
 constexpr uint32_t START_DSTEP_US = 8; // Microseconds per start delay step
+constexpr uint8_t START_MOD_INC = 4; // Start power modulation step count increase (wraps in a byte)
+constexpr uint8_t START_FAIL_INC = 16; // start_tries step count increase (wraps in a byte, upon which we disarm)
+constexpr uint8_t START_MOD_LIMIT = 48; // Value at which power is reduced to avoid overheating
 constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC during starting
 constexpr uint32_t TIMING_MAX = 0x0080u; // ; Fixed or safety governor (no less than 0x0080, 321500eRPM).
 
@@ -129,5 +133,9 @@ volatile bool c_fet = false;
 
 // Startup vars
 volatile byte start_delay = 0x00u;
+ // Start modulation counter (to reduce heating from PWR_MAX_START if stuck)
+volatile byte start_modulate = 0x00u;
+// Number of start_modulate loops for eventual failure and disarm
+volatile byte start_fail = 0x00u;
 
 #endif

@@ -333,6 +333,22 @@ void wait_for_high() {
     wait_for_edge();
 }
 
+void start_failed() {
+    // TODO: This better,
+    // we probably should have a way to return to the control loop after a failed start after all.
+    // Perhaps wait until we receive a no throttle command and then return up to the arming loop somehow?
+    while(true) {
+	redLedOff();
+	greenLedOn();
+	delay(8*1000);
+	redLedOn();
+	greenLedOff();
+	delay(8*1000);
+    }
+}
+
+void run6_2() {}
+
 void run6() {
     // IF last commutation timed out and power is off, return to restart control
     if (!power_on && goodies == 0) {
@@ -341,7 +357,81 @@ void run6() {
 	restart_control();
 	return;
     }
+    // Each time TIMING_MAX is hit, sys_control is lsr'd
+    // If zero, try startin over with powerskipping.
+    // yl/yh.
+    uint16_t sys_control_copy = sys_control;
+    if (sys_control_copy == 0) {
+	start_from_running();
+	return;
+    }
 
+    if ( ENOUGH_GOODIES <= goodies ) {
+	// temp1 = goodies, yl/yh sys_control
+	run6_2(sys_control_copy);
+	return;
+    }
+    ++goodies;
+    // Build up sys_control to PWR_MAX_START in steps.
+    sys_control_copy += (POWER_RANGE + 47) / 48;
+    //temp1/temp2 are now power_max_start.
+
+    // If we've been trying to start for a while, modulate power to reduce heating.
+    // temp3 = start_fail, temp4 = start_modulate which is then subtracted and then stored.
+    // Looks weird, but this is what happens!
+    start_modulate -= -START_MOD_INC;
+
+    // If start_modulate == 0, do not skip over this section to run6_1.
+    if (start_modulate == 0) {
+	// If we've been trying for a long while, give up.
+	if ( start_fail - (-START_FAIL_INC) == 0) {
+	    start_failed();
+	    return;
+	} else {
+	    start_fail -= -START_FAIL_INC;
+	}
+
+    }
+    // Run 6_1:
+    // Allow first loop at full power, then modulate.
+    if ( START_FAIL_INC > start_fail || START_MOD_LIMIT > start_modulate ) {
+	run6_3(sys_control_copy, PWR_MAX_START);
+	return;
+    }
+    // temp1/2 are now POWER_COOL_START
+    run6_3(sys_control_copy, PWR_COOL_START);
+    return;
+}
+
+void run6_2(uint16_t sys_control_copy) {
+    startup = false;
+    start_fail = 0;
+    start_modulate = 0;
+    redLedOff();
+//////////////////////////////////////////////////////
+// Build up sys_control to MAX_POWER in steps.	    //
+// If SLOW_THROTTLE is disabled, this only limits   //
+// initial start ramp-up; once running, sys_control //
+// will stay at MAX_POWER unless timing is lost.    //
+//////////////////////////////////////////////////////
+    sys_control_copy += (POWER_RANGE + 31)/32;
+    // temp1/2 = MAX_POWER
+    run6_3(sys_control_copy, MAX_POWER);
+    return;
+}
+
+// If sys_control_copy is less than or equal to the currently determined
+// max_power (local_max_power), then set the real sys_control to sys_control_copy.
+// Otherwise, sys_control is the local_max_power.
+void run6_3(uint16_t sys_control_copy, uint16_t local_max_power) {
+    if ( local_max_power > sys_control_copy ) {
+	sys_control = sys_control_copy;
+    } else {
+	sys_control = local_max_power;
+    }
+    // In simonk, we go to run1 here,
+    // but that won't work so well here, need to structure slightly differntly!
+    return;
 }
 
 //  See run1 in simonk source.
@@ -663,6 +753,10 @@ void wait_commutation() {
 }
 
 void start_from_running() {
+    // Not quite where we run rc_duty_set normally,
+    // but should be fine to drop it in here for now!
+    rc_duty_set(0x00);
+
     switchPowerOff();
     init_comparator();
     greenLedOff();
@@ -689,6 +783,7 @@ void start_from_running() {
     goodies = ENOUGH_GOODIES;
     enablePwmInterrupt();
 
+    run_reverse();
 }
 
 // Also encapsulates wait_for_power_*
