@@ -430,14 +430,28 @@ void update_timing() {
     return;
 }
 
+void set_new_duty_l(uint16_t rc_duty_copy) {};
+void set_new_duty() {
+    set_new_duty_l(rc_duty);
+    return;
+}
+
 // Sets the speed that the ESC will try to rev to!
 // Takes PARAM in YL/YH.
 // Set YL/YH to MAX_POWER for full power, or 0 for off.
 void rc_duty_set(unsigned short new_rc_duty) {
     rc_duty = new_rc_duty;
+    if (set_duty) {
+	rc_timeout = RCP_TOT;
+	set_new_duty_l(rc_duty);
+	return;
+    } else {
+	if ( 12 > rc_timeout ) {
+	    ++rc_timeout;
+	}
+	return;
+    }
 }
-
-void set_new_duty(const uint16_t timing_duty) {};
 
 ////////////////////////////////////////////////////////////////////////////
 // ; Calculate a hopefully sane duty cycle limit from this timing,	  //
@@ -452,7 +466,7 @@ void set_new_duty(const uint16_t timing_duty) {};
 // Last_tcnt1_copy = yl/yh/temp7.
 // xl/xh new_duty
 void update_timing4(uint16_t new_duty, uint32_t current_timing_period, uint32_t unused) {
-    uint16_t timing_duty = new_duty;
+    timing_duty = new_duty;
     // Set timing_l/h/x.
     timing = current_timing_period;
 
@@ -474,7 +488,7 @@ void update_timing4(uint16_t new_duty, uint32_t current_timing_period, uint32_t 
 	set_ocr1a_abs_slow(com_timing);
     }
     // EVal rc?
-    set_new_duty(timing_duty);
+    set_new_duty();
     return;
 
 };
@@ -530,7 +544,7 @@ void update_timing1(const uint32_t current_timing_period, const uint32_t last_tc
 	}
 	// Now set the carry to if our shift would have set it.
 	carry = carry_next;
-	// This finished roling xl/xh/timing_duty_l.
+	// This finished rolling xl/xh/timing_duty_l.
 	--counter;
     } while(counter != 0);
 

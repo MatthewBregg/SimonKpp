@@ -55,6 +55,7 @@ uint16_t safety_governor = 0x00FFu;
 // and then finish the period and reset?
 volatile uint16_t duty = 0;	//   on duty cycle, one's complement
 volatile uint16_t off_duty = 0;	//   on duty cycle, one's complement
+volatile uint16_t timing_duty = 0; // timing duty limit.
 // How much the RC command is telling us to peg the throttle at?
 volatile uint16_t rc_duty = 0x00;
 
