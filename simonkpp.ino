@@ -54,6 +54,7 @@ void set_ocr1a_rel(const uint32_t timing) {
 // For a quick'n'dirty check that this code did what I think, and what the simonk comment says
 // (which hopefully is what this actually does in simonk!!!), I wrote/ran
 // https://pastebin.com/eVc0asJa
+// returns via y/7.
 uint32_t update_timing_add_degrees(uint32_t local_timing, uint32_t local_com_time, const byte degree /* temp4 */) {
     // I'm probably seeing the forest for the trees.
     // TODO(bregg): Look at this again.
@@ -429,6 +430,15 @@ void update_timing() {
     return;
 }
 
+// Sets the speed that the ESC will try to rev to!
+// Takes PARAM in YL/YH.
+// Set YL/YH to MAX_POWER for full power, or 0 for off.
+void rc_duty_set(unsigned short new_rc_duty) {
+    rc_duty = new_rc_duty;
+}
+
+void set_new_duty(const uint16_t timing_duty) {};
+
 ////////////////////////////////////////////////////////////////////////////
 // ; Calculate a hopefully sane duty cycle limit from this timing,	  //
 // ; to prevent excessive current if high duty is requested at low	  //
@@ -437,19 +447,46 @@ void update_timing() {
 // ; so this is just an approximation. This is calculated smoothly	  //
 // ; with a (very slow) software divide only if timing permits.		  //
 ////////////////////////////////////////////////////////////////////////////
-// current_timing_prime = temp1/2/3.
-// last_tcnt1_copy = yl/yh/tempy
 
-void update_timing4() {};
+// Current Timing_period = temp1/2/3.
+// Last_tcnt1_copy = yl/yh/temp7.
+// xl/xh new_duty
+void update_timing4(uint16_t new_duty, uint32_t current_timing_period, uint32_t unused) {
+    uint16_t timing_duty = new_duty;
+    // Set timing_l/h/x.
+    timing = current_timing_period;
+
+    current_timing_period = current_timing_period >> 1;
+
+    uint32_t last_tcnt1_copy = last_tcnt1;
+    // This clobbers registers y/7.
+    // Get and then store the start of the next commutation.
+    com_timing = update_timing_add_degrees(current_timing_period,
+						    last_tcnt1_copy,
+						    (30 - MOTOR_ADVANCE) * 256 / 60);
+
+    // Will 240 fit in 15 bits?
+    if ( 0x0010 > ((current_timing_period >> 8) & 0xFFFF))  {
+	timing_fast = true;
+	set_ocr1a_abs_fast(com_timing); // Set timer for the next commutation
+    } else  {
+	timing_fast = false;
+	set_ocr1a_abs_slow(com_timing);
+    }
+    // EVal rc?
+    set_new_duty(timing_duty);
+    return;
+
+};
 
 
 // Current Timing_period = temp1/2/3.
 // Last_tcnt1_copy = yl/yh/temp7.
-void update_timing1(uint32_t current_timing_period, uint32_t last_tcnt1_copy) {
+void update_timing1(const uint32_t current_timing_period, const uint32_t last_tcnt1_copy) {
     // XL/XH = MAX_POWER
     uint16_t new_duty = MAX_POWER;
     if ( SLOW_CPU && ((current_timing_period >> 8) & 0x00FFFF) < (TIMING_RANGE3 * cpu_mhz/2)) {
-	update_timing4(); // Fast timing: no duty limit
+	update_timing4(new_duty, current_timing_period, last_tcnt1_copy);  // Fast timing: no duty limit
 	return;
     }
     // TODO: Look into this more, after all this is quite tricky!!
@@ -505,7 +542,7 @@ void update_timing1(uint32_t current_timing_period, uint32_t last_tcnt1_copy) {
 	new_duty = PWR_MAX_RPM1;
     }
 
-    update_timing4();
+    update_timing4(new_duty, current_timing_period, last_tcnt1_copy);
     return;
 }
 

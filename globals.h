@@ -6,6 +6,7 @@
 // SimonK tuning notes: http://torukmakto4.blogspot.com/2018/05/project-t19-part-12-flywheel-drive.html
 
 // Constants
+constexpr byte MOTOR_ADVANCE = 13; // Degrees of timing advance (0 - 30, 30 meaning no delay)
 constexpr bool HIGH_SIDE_PWM = false;
 constexpr unsigned short MIN_DUTY = 56 * cpu_mhz/16;
 constexpr unsigned short POWER_RANGE = 1500U * cpu_mhz/16 + MIN_DUTY;
@@ -54,6 +55,8 @@ uint16_t safety_governor = 0x00FFu;
 // and then finish the period and reset?
 volatile uint16_t duty = 0;	//   on duty cycle, one's complement
 volatile uint16_t off_duty = 0;	//   on duty cycle, one's complement
+// How much the RC command is telling us to peg the throttle at?
+volatile uint16_t rc_duty = 0x00;
 
 // The PWM interrupt uses this byte to determine which action to take.
 // Why an enum and not a function pointer? An enum should be 8 bits,
@@ -108,7 +111,9 @@ volatile byte goodies = 0U;
 // Making these 32 bit might not be as efficient, but using 3 bytes is stupid messy,
 // and coercing the compiler to actually make a 24 bit int type seems tricky, so...
 // This is a problem that won't exist on a 32 bit platform anywho.
+// timing_l, timing_h, timing_x
 volatile  uint32_t timing = 0x00U; // Interval of 2 commutations.
+// com_time_l, com_time_h, com_time_x
 volatile uint32_t com_timing = 0x00U; // time of last commutation.
 
 
