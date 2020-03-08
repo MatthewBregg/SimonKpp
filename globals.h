@@ -9,8 +9,18 @@
 constexpr bool HIGH_SIDE_PWM = false;
 constexpr unsigned short MIN_DUTY = 56 * cpu_mhz/16;
 constexpr unsigned short POWER_RANGE = 1500U * cpu_mhz/16 + MIN_DUTY;
+constexpr unsigned short PWR_MAX_RPM1 = (POWER_RANGE/6); //  Power limit when running slower than TIMING_RANGE1
 constexpr unsigned short MAX_POWER = POWER_RANGE-1;
 constexpr unsigned short PWR_MIN_START = POWER_RANGE/6;
+// 8192us per commutation
+constexpr uint16_t TIMING_MIN = 0x8000;
+ // tm4 change - start ramping duty earlier due to less PWR_MAX_RPM1 (stock 0x4000 - 4096us per commutation)
+constexpr uint16_t TIMING_RANGE1 = 0x6000;
+// 2048us per commutation (Note this is unused and for legacy "Powershift" versions --tm4)
+constexpr uint16_t TIMING_RANGE2 = 0x2000;
+//1024us per commutation
+constexpr uint16_t TIMING_RANGE3 = 0x1000;
+
 constexpr byte RCP_TOT = 2U; // Number of 65536us periods before considering rc pulse lost
  // This many start cycles without timeout will transition to running mode
 // (tm4 experimental 05-01-18 - stock 12)

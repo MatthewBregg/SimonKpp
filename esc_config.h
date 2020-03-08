@@ -34,5 +34,6 @@ constexpr byte cpu_mhz = 16U;
 
 // Do we need to use the various _fast methods, or can we always use the better slow methods?
 constexpr boolean slow_cpu = true;
+constexpr boolean SLOW_CPU = slow_cpu;
 
 #endif

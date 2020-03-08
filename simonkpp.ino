@@ -415,7 +415,7 @@ void update_timing() {
 	// We've reached timing_max, divide sys_control by 2 and go to update_timing1.
 	tcnt1_and_x_copy = (TIMING_MAX * cpu_mhz/2);
 	sys_control /= 2;
-	update_timing1();
+	update_timing1(tcnt1_and_x_copy, last_tcnt1_copy);
 	return;
     }
     // Otherwise repeat the above check with our governor.
@@ -425,11 +425,89 @@ void update_timing() {
 	tcnt1_and_x_copy = safety_governor;
 	sys_control /= 2;
     }
-    update_timing1();
+    update_timing1(tcnt1_and_x_copy, last_tcnt1_copy);
     return;
 }
 
-void update_timing1() {}
+////////////////////////////////////////////////////////////////////////////
+// ; Calculate a hopefully sane duty cycle limit from this timing,	  //
+// ; to prevent excessive current if high duty is requested at low	  //
+// ; speed. This is the best we can do without a current sensor.	  //
+// ; The actual current peak will depend on motor KV and voltage,	  //
+// ; so this is just an approximation. This is calculated smoothly	  //
+// ; with a (very slow) software divide only if timing permits.		  //
+////////////////////////////////////////////////////////////////////////////
+// current_timing_prime = temp1/2/3.
+// last_tcnt1_copy = yl/yh/tempy
+
+void update_timing4() {};
+
+
+// Current Timing_period = temp1/2/3.
+// Last_tcnt1_copy = yl/yh/temp7.
+void update_timing1(uint32_t current_timing_period, uint32_t last_tcnt1_copy) {
+    // XL/XH = MAX_POWER
+    uint16_t new_duty = MAX_POWER;
+    if ( SLOW_CPU && ((current_timing_period >> 8) & 0x00FFFF) < (TIMING_RANGE3 * cpu_mhz/2)) {
+	update_timing4(); // Fast timing: no duty limit
+	return;
+    }
+    // TODO: Look into this more, after all this is quite tricky!!
+    // Hope this division works!!!!
+    // Implement simple fixed point division.
+    // new_duty = MAX_POWER * (TIMING_RANGE3 * cpu_mhz/2)/  current_timing_period);;
+
+    uint32_t undivided_value = (MAX_POWER * (TIMING_RANGE3 * cpu_mhz / 2) / 0x100);
+    uint8_t counter = 33;
+    bool carry = false;
+    uint32_t temp456 = 0x00u;;
+    // Is this shift going to set the carry?
+    carry = undivided_value & 0x800000u;
+    undivided_value = undivided_value << 1;
+    --counter;
+    do {
+	// We don't use this carry.
+	// bool carry_next = temp456 & 0x800000u;
+	temp456 = temp456 << 1;
+	if (carry) {
+	    ++temp456;
+	}
+	// We don't use this carry.
+	// carry = carry_next;
+
+	carry = current_timing_period > temp456;
+	if ( ! carry ) {
+	    // Set what the carry will be from subtraction here.
+	    if ( current_timing_period > temp456 ) {
+		carry = true;
+	    }
+	    // subtraction here.
+	    temp456-=current_timing_period;
+	}
+	// Is our shift about to set the carry?
+	bool carry_next = undivided_value & 0x800000u;
+	undivided_value = undivided_value << 1;
+	// If we went into this with the OG carry set, add the carry on now.
+	if ( carry ) {
+	    ++undivided_value;
+	}
+	// Now set the carry to if our shift would have set it.
+	carry = carry_next;
+	// This finished roling xl/xh/timing_duty_l.
+	--counter;
+    } while(counter != 0);
+
+    // DONE DIVISION!
+    // Ones complement the output.
+    new_duty = ~undivided_value;
+
+    if ( PWR_MAX_RPM1 > new_duty ) {
+	new_duty = PWR_MAX_RPM1;
+    }
+
+    update_timing4();
+    return;
+}
 
 void wait_commutation() {
     flagOn();
