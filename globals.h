@@ -12,7 +12,8 @@ constexpr unsigned short MIN_DUTY = 56 * cpu_mhz/16;
 constexpr unsigned short POWER_RANGE = 1500U * cpu_mhz/16 + MIN_DUTY;
 constexpr unsigned short PWR_MAX_RPM1 = (POWER_RANGE/6); //  Power limit when running slower than TIMING_RANGE1
 constexpr unsigned short MAX_POWER = POWER_RANGE-1;
-constexpr unsigned short PWR_MIN_START = POWER_RANGE/6;
+constexpr unsigned short PWR_MIN_START = POWER_RANGE/6; // Power limit while starting (to start)
+constexpr unsigned short PWR_MAX_START = POWER_RANGE/6; // Power limit while starting (if still not running)
 // 8192us per commutation
 constexpr uint16_t TIMING_MIN = 0x8000;
  // tm4 change - start ramping duty earlier due to less PWR_MAX_RPM1 (stock 0x4000 - 4096us per commutation)
