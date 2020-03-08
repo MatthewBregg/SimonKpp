@@ -347,62 +347,6 @@ void start_failed() {
     }
 }
 
-void run6_2() {}
-
-void run6() {
-    // IF last commutation timed out and power is off, return to restart control
-    if (!power_on && goodies == 0) {
-	// TODO: Risk of stack overflow here eventually if we restart control enough?!
-	// Eventually does it make sense to just make restartControl a loop perhaps?
-	restart_control();
-	return;
-    }
-    // Each time TIMING_MAX is hit, sys_control is lsr'd
-    // If zero, try startin over with powerskipping.
-    // yl/yh.
-    uint16_t sys_control_copy = sys_control;
-    if (sys_control_copy == 0) {
-	start_from_running();
-	return;
-    }
-
-    if ( ENOUGH_GOODIES <= goodies ) {
-	// temp1 = goodies, yl/yh sys_control
-	run6_2(sys_control_copy);
-	return;
-    }
-    ++goodies;
-    // Build up sys_control to PWR_MAX_START in steps.
-    sys_control_copy += (POWER_RANGE + 47) / 48;
-    //temp1/temp2 are now power_max_start.
-
-    // If we've been trying to start for a while, modulate power to reduce heating.
-    // temp3 = start_fail, temp4 = start_modulate which is then subtracted and then stored.
-    // Looks weird, but this is what happens!
-    start_modulate -= -START_MOD_INC;
-
-    // If start_modulate == 0, do not skip over this section to run6_1.
-    if (start_modulate == 0) {
-	// If we've been trying for a long while, give up.
-	if ( start_fail - (-START_FAIL_INC) == 0) {
-	    start_failed();
-	    return;
-	} else {
-	    start_fail -= -START_FAIL_INC;
-	}
-
-    }
-    // Run 6_1:
-    // Allow first loop at full power, then modulate.
-    if ( START_FAIL_INC > start_fail || START_MOD_LIMIT > start_modulate ) {
-	run6_3(sys_control_copy, PWR_MAX_START);
-	return;
-    }
-    // temp1/2 are now POWER_COOL_START
-    run6_3(sys_control_copy, PWR_COOL_START);
-    return;
-}
-
 void run6_2(uint16_t sys_control_copy) {
     startup = false;
     start_fail = 0;
@@ -435,23 +379,83 @@ void run6_3(uint16_t sys_control_copy, uint16_t local_max_power) {
 }
 
 //  See run1 in simonk source.
+// TODO: Rename this to run, place the wait_for_low9) ... com2com1()
+// under a bool reverse and add the run_forward function in also!
 void run_reverse() {
-    wait_for_low();
-    com1com6();
-    sync_on();
-    wait_for_high();
-    com6com5();
-    wait_for_low();
-    com5com4();
-    wait_for_high();
-    com4com3();
-    sync_off();
-    wait_for_low();
-    com3com2();
-    wait_for_high();
-    com2com1();
-    run6();
+    while ( true ) {
+	wait_for_low();
+	com1com6();
+	sync_on();
+	wait_for_high();
+	com6com5();
+	wait_for_low();
+	com5com4();
+	wait_for_high();
+	com4com3();
+	sync_off();
+	wait_for_low();
+	com3com2();
+	wait_for_high();
+	com2com1();
+    ///////////
+    // run6: //
+    ///////////
+	// IF last commutation timed out and power is off, return to restart control
+	if (!power_on && goodies == 0) {
+	    // TODO: Risk of stack overflow here eventually if we restart control enough?!
+	    // Eventually does it make sense to just make restartControl a loop perhaps?
+	    // Can we replace this with a break perhaps?
+	    restart_control();
+	    return;
+	}
+	// Each time TIMING_MAX is hit, sys_control is lsr'd
+	// If zero, try startin over with powerskipping.
+	// yl/yh.
+	uint16_t sys_control_copy = sys_control;
+	if (sys_control_copy == 0) {
+	    start_from_running();
+	    return;
+	}
 
+	if ( ENOUGH_GOODIES <= goodies ) {
+	    // temp1 = goodies, yl/yh sys_control
+	    run6_2(sys_control_copy);
+	    // Loops again at run1.
+	    continue;
+	}
+	++goodies;
+	// Build up sys_control to PWR_MAX_START in steps.
+	sys_control_copy += (POWER_RANGE + 47) / 48;
+	//temp1/temp2 are now power_max_start.
+
+	// If we've been trying to start for a while, modulate power to reduce heating.
+	// temp3 = start_fail, temp4 = start_modulate which is then subtracted and then stored.
+	// Looks weird, but this is what happens!
+	start_modulate -= -START_MOD_INC;
+
+	// If start_modulate == 0, do not skip over this section to run6_1.
+	if (start_modulate == 0) {
+	    // If we've been trying for a long while, give up.
+	    if ( start_fail - (-START_FAIL_INC) == 0) {
+		start_failed();
+		return;
+	    } else {
+		start_fail -= -START_FAIL_INC;
+	    }
+
+	}
+	// Run 6_1:
+	// Allow first loop at full power, then modulate.
+	if ( START_FAIL_INC > start_fail || START_MOD_LIMIT > start_modulate ) {
+	    run6_3(sys_control_copy, PWR_MAX_START);
+	    // Loops again at run1.
+	    continue;
+	}
+	// temp1/2 are now POWER_COOL_START
+	run6_3(sys_control_copy, PWR_COOL_START);
+	// Loops again at run1.
+	continue;
+    }
 }
 
 // Time for the dragon: UPDATE TIMING.
