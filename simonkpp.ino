@@ -273,7 +273,7 @@ void wait_timeout(byte quartered_timing_higher, byte quartered_timing_lower) {
 	wait_timeout1(quartered_timing_higher,quartered_timing_lower);
 	return;
     }
-    // Intentionally passing lower both times.
+    // Intentionally passing higher both times.
     wait_timeout1(quartered_timing_higher,quartered_timing_higher); // Clip current distance from crossing.
     return;
 }
@@ -289,7 +289,7 @@ void wait_for_edge2(byte quartered_timing_higher, byte quartered_timing_lower) {
 	// potentially eval_rc,/set_duty here if we are doing that with our new protocol.
 	// .if 0 ; Visualize comparator output on the flag pin.
 
-	opposite_level = (aco_edge_high && (ACSR & getByteWithBitSet(ACO)));
+	opposite_level = (aco_edge_high != (bool(ACSR & getByteWithBitSet(ACO))));
 
 	if (opposite_level != HIGH_SIDE_PWM) {
 	    // cp xl, xh
@@ -320,7 +320,7 @@ void wait_for_demag() {
 	    return;
 	}
 	// potentially eval_rc,/set_duty here if we are doing that with our new protocol.
-    } while((aco_edge_high && (ACSR & getByteWithBitSet(ACO))) != HIGH_SIDE_PWM);  // Check for demagnetization;
+    } while((aco_edge_high != (bool(ACSR & getByteWithBitSet(ACO)))) != HIGH_SIDE_PWM);  // Check for demagnetization;
     wait_for_edge0();
 }
 
@@ -401,7 +401,7 @@ void run6_2(uint16_t sys_control_copy) {
 // initial start ramp-up; once running, sys_control //
 // will stay at MAX_POWER unless timing is lost.    //
 //////////////////////////////////////////////////////
-    sys_control_copy += (POWER_RANGE + 31)/32;
+    sys_control_copy += (POWER_RANGE + 31)/32.0;
     // temp1/2 = MAX_POWER
     run6_3(sys_control_copy, MAX_POWER);
     return;
@@ -468,22 +468,21 @@ void run_reverse() {
 	}
 	++goodies;
 	// Build up sys_control to PWR_MAX_START in steps.
-	sys_control_copy += (POWER_RANGE + 47) / 48;
+	sys_control_copy += (POWER_RANGE + 47) / 48.0;
 	//temp1/temp2 are now power_max_start.
 
 	// If we've been trying to start for a while, modulate power to reduce heating.
 	// temp3 = start_fail, temp4 = start_modulate which is then subtracted and then stored.
-	// Looks weird, but this is what happens!
-	start_modulate -= -START_MOD_INC;
+	start_modulate += START_MOD_INC;
 
 	// If start_modulate == 0, do not skip over this section to run6_1.
 	if (start_modulate == 0) {
 	    // If we've been trying for a long while, give up.
-	    if ( start_fail - (-START_FAIL_INC) == 0) {
+	    if ( (start_fail + START_FAIL_INC) == 0) {
 		start_failed();
 		return;
 	    } else {
-		start_fail -= -START_FAIL_INC;
+		start_fail += START_FAIL_INC;
 	    }
 
 	}
