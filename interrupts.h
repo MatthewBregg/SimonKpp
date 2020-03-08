@@ -185,13 +185,13 @@ void switchPowerOff() {
     setPwmToNop();
     // Switch all fets off.
     // Turn off all pFets
-    ApFetOn();
-    BpFetOn();
-    CpFetOn();
+    ApFetOff();
+    BpFetOff();
+    CpFetOff();
     // Turn off all nFets
-    AnFetOn();
-    BnFetOn();
-    CnFetOn();
+    AnFetOff();
+    BnFetOff();
+    CnFetOff();
 }
 
 

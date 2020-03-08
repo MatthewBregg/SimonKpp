@@ -30,6 +30,9 @@ void setup() {
 void loop() {
     enableTimerInterrupts();
     sei();
+    // Delay before starting the fight!
+    delay(2000);
+    restart_control();
     return;
 }
 
@@ -759,7 +762,7 @@ void wait_commutation() {
 void start_from_running() {
     // Not quite where we run rc_duty_set normally,
     // but should be fine to drop it in here for now!
-    rc_duty_set(0x00);
+    rc_duty_set(MAX_POWER);
 
     switchPowerOff();
     init_comparator();
@@ -793,7 +796,11 @@ void start_from_running() {
 // Also encapsulates wait_for_power_*
 void restart_control() {
     switchPowerOff();
+    while(true) {
+	    greenLedOn();
+    }
     set_duty = false;
+    rc_duty_set(0x00);
     greenLedOn();
     redLedOff();
     // Idle beeping happened here in simonk.
