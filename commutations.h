@@ -108,11 +108,17 @@ void commutate_c_on() {
     if ( HIGH_SIDE_PWM ) { CnFetOn(); } else { CpFetOn(); }
 }
 
+void all_fets_false() {
+    a_fet = false;
+    b_fet = false;
+    c_fet = false;
+}
+
 // An on, Cn off
 void com1com6() {
     set_comp_phase_c();
     cli();
-    all_fets = false;
+    all_fets_false();
     a_fet = true;
     pwm_focus_c_off();
     pwm_a_copy(pwm_c_clear());
@@ -133,7 +139,7 @@ void com6com5() {
 void com5com4() {
     set_comp_phase_a();
     cli();
-    all_fets = false;
+    all_fets_false();
     b_fet = true;
     pwm_focus_a_off();
     pwm_b_copy(pwm_a_clear());
@@ -154,7 +160,7 @@ void com4com3() {
 void com3com2() {
     set_comp_phase_b();
     cli();
-    all_fets = false;
+    all_fets_false();
     c_fet = true;
     pwm_focus_b_off();
     pwm_c_copy(pwm_b_clear());

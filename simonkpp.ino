@@ -3,6 +3,7 @@
 #include "commutations.h"
 #include "interrupts.h"
 #include "beep.h"
+
 // REMEMBER: VARIABLES BEING set/access from an interrupt must be volatile!
 // Big TODO: Move into proper .cc/.h files, and INLINE the world. I can use -Winline to make not inlining a warning.
 
@@ -452,6 +453,8 @@ void run_reverse() {
 	    }
 
 	}
+
+
 	// Run 6_1:
 	// Allow first loop at full power, then modulate.
 	if ( START_FAIL_INC > start_fail || START_MOD_LIMIT > start_modulate ) {

@@ -130,6 +130,7 @@ void pwm_on_fast() {
     if (b_fet) {
 	pwm_b_on();
     }
+
     if (c_fet) {
 	pwm_c_on();
     }

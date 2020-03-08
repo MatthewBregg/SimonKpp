@@ -126,7 +126,6 @@ volatile uint32_t com_timing = 0x00U; // time of last commutation.
 volatile uint16_t sys_control = 0x00u; // duty limit
 
 // FET STATUS
-volatile bool all_fets = false;
 volatile bool a_fet = false;
 volatile bool b_fet = false;
 volatile bool c_fet = false;
