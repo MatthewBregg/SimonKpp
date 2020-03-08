@@ -430,7 +430,38 @@ void update_timing() {
     return;
 }
 
-void set_new_duty_l(uint16_t rc_duty_copy) {};
+void set_new_duty_l(uint16_t rc_duty_copy) {
+    if ( timing_duty <= rc_duty_copy ) {
+	rc_duty_copy = timing_duty;
+    }
+    // set_new_duty_10.
+    if ( sys_control <= rc_duty_copy ) {
+	rc_duty_copy = sys_control;
+    }
+    // Set new duty limit 11
+    // SLOW_THROTTLE
+    //////////////////////////////////////////////////////////////
+    // If sys_control is higher than twice the current duty,    //
+    // limit it to that. This means that a steady-state duty    //
+    // cycle can double at any time, but any larger change will //
+    // be rate-limited.					        //
+    //////////////////////////////////////////////////////////////
+    uint16_t new_duty = PWR_MIN_START;
+    // New duty is at least PWR_MIN_START, but if rc_duty_copy is higher duty, use that.
+    if ( PWR_MIN_START <= rc_duty_copy ) {
+	new_duty = rc_duty_copy;
+    }
+
+    new_duty = new_duty << 1;
+
+    if ( new_duty <= sys_control ) {
+	sys_control = new_duty;
+    }
+    // Set new duty 13.
+
+
+
+}
 void set_new_duty() {
     set_new_duty_l(rc_duty);
     return;
