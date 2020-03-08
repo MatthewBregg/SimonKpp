@@ -45,7 +45,7 @@ constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC duri
 constexpr uint32_t TIMING_MAX = 0x011Du; // ; Fixed or safety governor (no less than 0x0080, 321500eRPM).
 
 // Non Constants
-uint16_t safety_governor = 0x0476u * (cpu_mhz/2);
+uint16_t safety_governor = 0x0000u * (cpu_mhz/2);
 
 // PWM Related
 

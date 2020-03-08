@@ -46,6 +46,11 @@ byte get_high(const unsigned short in) {
     return (0xFF00u & in) >> 8;
 }
 
+uint8_t get_byte3(const uint32_t in) {
+    return (0xFF0000u & in) >> 16;
+}
+
+
 void set_ocr1a_rel(const uint32_t timing) {
     const byte upper = (timing >> 16) & 0xFFu;
     const unsigned short lower = (timing & 0xFFFFu);
@@ -53,19 +58,26 @@ void set_ocr1a_rel(const uint32_t timing) {
 }
 
 // Also careful, inputs are oh god, 1,2,3, 4, y/temp7.
-// Temp4: DEgrees
-// 1/2/3: timing_l
+// Temp4: Degrees
+// 1/2/3: local_timing
 // y/7: com_time.
 // For a quick'n'dirty check that this code did what I think, and what the simonk comment says
 // (which hopefully is what this actually does in simonk!!!), I wrote/ran
 // https://pastebin.com/eVc0asJa
 // returns via y/7.
-uint32_t update_timing_add_degrees(uint32_t local_timing, uint32_t local_com_time, const byte degree /* temp4 */) {
-    // I'm probably seeing the forest for the trees.
-    // TODO(bregg): Look at this again.
-    uint32_t new_com_timing = local_timing*((uint32_t)degree);
-    return ((new_com_timing >> 8) & 0xFFFFFFu) + local_com_time;
+// Messing around here:
+// https://pastebin.com/xW8fGFz5
+uint32_t update_timing_add_degrees(uint32_t local_timing,
+uint32_t local_com_time,
+ uint8_t degree /* temp4 */) {
+
+   local_com_time += get_high(degree * get_low(local_timing));
+   local_com_time += degree * get_high(local_timing);
+   // TODO: Removing this uint32_t changes the behavior of this function?! Why?
+   local_com_time += (((uint32_t)degree) * ((uint32_t)get_byte3(local_timing))) << 8;
+   return local_com_time & 0xFFFFFFu;
 }
+
 
 void wait_startup() {
     uint32_t new_timing = START_DELAY_US * ((uint32_t) cpu_mhz);
@@ -95,7 +107,6 @@ uint32_t set_timing_degrees_slow(const byte degree /* temp4 */) {
 // Another scary and tricky and bug prone function?
 void set_timing_degrees(const byte degree /* temp4 */) {
     if ( slow_cpu && timing_fast ) {
-
 	// WTF is this? Is this just normal 16x16 multiplication? Need to play around with this,
 	// I'm probably seeing the forest for the trees.
 	// TODO(bregg): Look at this again.
@@ -121,7 +132,7 @@ void wait_OCT1_tot() {
 }
 
 void demag_timeout() {
-    isPwmSetToNop(); // Stop PWM switching, interrupts will not turn on any fets now!
+    setPwmToNop(); // Stop PWM switching, interrupts will not turn on any fets now!
     pwm_all_off();
     redLedOn();
     // Skip power for the next commutation. Note that this
@@ -263,7 +274,7 @@ void wait_timeout(byte quartered_timing_higher, byte quartered_timing_lower) {
 	return;
     }
     // Intentionally passing lower both times.
-    wait_timeout1(quartered_timing_lower,quartered_timing_lower); // Clip current distance from crossing.
+    wait_timeout1(quartered_timing_higher,quartered_timing_higher); // Clip current distance from crossing.
     return;
 }
 
@@ -770,7 +781,7 @@ void wait_commutation() {
 void start_from_running() {
     // Not quite where we run rc_duty_set normally,
     // but should be fine to drop it in here for now!
-    rc_duty_set(MAX_POWER/8);
+    rc_duty_set(MAX_POWER/4);
     switchPowerOff();
     init_comparator();
     greenLedOff();
@@ -857,7 +868,7 @@ void wait_for_edge0() {
 void wait_for_edge2(byte quartered_timing_higher, byte quartered_timing_lower) {
     bool opposite_level;
     do {
-	// If we don't have an oct1_pending, go to demag_timeout.
+	// If OCT1_pending, we need to go to wait_timeout.
 	if (!oct1_pending) {
 	    wait_timeout(quartered_timing_higher,quartered_timing_lower);
 	    return;
