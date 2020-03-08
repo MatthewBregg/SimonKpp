@@ -619,7 +619,7 @@ void set_new_duty_l(uint16_t rc_duty_copy) {
     // At higher PWM frequencies, halve the frequency
     // when starting -- this helps hard drive startup
 
-    if (POWER_RANGE < 1700 * cpu_mhz / 16){ // 1700 is a torukmakto4 change
+    if (POWER_RANGE < (1700 * (cpu_mhz / 16.0))){ // 1700 is a torukmakto4 change
 	if (startup) {
 	    new_duty = new_duty << 1;
 	    rc_duty_copy = rc_duty_copy << 1;
@@ -728,7 +728,7 @@ void update_timing1(const uint32_t current_timing_period, const uint32_t last_tc
     // Implement simple fixed point division.
     // new_duty = MAX_POWER * (TIMING_RANGE3 * cpu_mhz/2)/  current_timing_period);;
 
-    uint32_t undivided_value = (MAX_POWER * (TIMING_RANGE3 * cpu_mhz / 2) / 0x100);
+    uint32_t undivided_value = (MAX_POWER * (TIMING_RANGE3 * cpu_mhz / 2) / 256.0);
     uint8_t counter = 33;
     bool carry = false;
     uint32_t temp456 = 0x00u;;
