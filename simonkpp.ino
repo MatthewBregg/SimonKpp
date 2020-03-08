@@ -631,8 +631,8 @@ void set_new_duty_l(uint16_t rc_duty_copy) {
 // rc_duty_copy = yl/yh, new_duty = temp1/2.
 void set_new_duty_21(uint16_t rc_duty_copy, uint16_t new_duty, const PWM_STATUS_ENUM next_pwm_status) {
     // set_new_duty21:
-    new_duty = (new_duty & 0xFF00u) | ~get_low(new_duty);
-    rc_duty_copy = (rc_duty_copy & 0xFF00u) | ~get_low(rc_duty_copy);
+    new_duty = (new_duty & 0xFF00u) | (~get_low(new_duty) & 0xFFu);
+    rc_duty_copy = (rc_duty_copy & 0xFF00u) | (~get_low(rc_duty_copy) & 0xFFu);
     duty = rc_duty_copy;
     cli();
     off_duty = new_duty;
@@ -771,6 +771,7 @@ void update_timing1(const uint32_t current_timing_period, const uint32_t last_tc
     // DONE DIVISION!
     // Ones complement the output.
     new_duty = ~undivided_value;
+    new_duty = new_duty & 0x0000FFFFu;
 
     if ( PWR_MAX_RPM1 > new_duty ) {
 	new_duty = PWR_MAX_RPM1;
