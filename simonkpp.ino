@@ -301,9 +301,9 @@ void wait_pwm_running() {
     if ( startup ) {
 	wait_startup();
     }
-    set_timing_degrees(13U * 256U/120U);
+    set_timing_degrees(13U * 256U/120.0);
     wait_OCT1_tot(); // Wait for the minimum blanking period;
-    set_timing_degrees(42U * 256U/120U); // Set timeout for maximum blanking period.
+    set_timing_degrees(42U * 256U/120.0); // Set timeout for maximum blanking period.
 
     wait_for_demag();
 }
@@ -675,7 +675,7 @@ void update_timing4(uint16_t new_duty, uint32_t current_timing_period, uint32_t 
     // Get and then store the start of the next commutation.
     com_timing = update_timing_add_degrees(current_timing_period,
 						    last_tcnt1_copy,
-						    (30 - MOTOR_ADVANCE) * 256 / 60);
+						    (30 - MOTOR_ADVANCE) * 256 / 60.0);
 
     // Will 240 fit in 15 bits?
     if ( 0x0010 > ((current_timing_period >> 8) & 0xFFFF))  {
@@ -842,12 +842,13 @@ void wait_for_edge_below_max(byte quartered_timing_lower) {
 	wait_for_edge_fast(quartered_timing_lower);
 	return;
     }
-    set_timing_degrees(24*256/120);
+    set_timing_degrees(24*256/120.0);
     wait_for_edge1(quartered_timing_lower);
 }
 
 void wait_for_edge0() {
-    unsigned short quartered_timing =  timing >> 2;
+    // We take the two high  bytes of timing, and then left shift twice!
+    unsigned short quartered_timing =  ((timing >> 8) & 0xFFFF) >> 2;
     if ( quartered_timing <  MASKED_ZC_CHECK_MIN ) {
 	wait_for_edge_fast_min();
 	return;
