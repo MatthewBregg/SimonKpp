@@ -4,8 +4,6 @@
 #include "interrupts.h"
 #include "beep.h"
 
-constexpr uint32_t DEBUG_GOTO_POWER = MAX_POWER/4.0;
-
 // REMEMBER: VARIABLES BEING set/access from an interrupt must be volatile!
 // Big TODO: Move into proper .cc/.h files, and INLINE the world. I can use -Winline to make not inlining a warning.
 
@@ -129,7 +127,6 @@ void wait_OCT1_tot() {
     do {
 	// Potentially eval_rc, if the EVAL_RC flag is set.
 	// if (eval_rc) { evaluate_rc(); }
-	set_new_duty();
     } while(oct1_pending); // Wait for commutation_time,
     // an interrupt will eventually flip this, t1oca_int:.
 }
@@ -291,7 +288,6 @@ void wait_for_edge2(byte quartered_timing_higher, byte quartered_timing_lower) {
 	}
 	// potentially eval_rc,/set_duty here if we are doing that with our new protocol.
 	// .if 0 ; Visualize comparator output on the flag pin.
-	set_new_duty();
 
 	opposite_level = (aco_edge_high != (bool(ACSR & getByteWithBitSet(ACO))));
 
@@ -324,7 +320,6 @@ void wait_for_demag() {
 	    return;
 	}
 	// potentially eval_rc,/set_duty here if we are doing that with our new protocol.
-	set_new_duty();
     } while((aco_edge_high != (bool(ACSR & getByteWithBitSet(ACO)))) != HIGH_SIDE_PWM);  // Check for demagnetization;
     wait_for_edge0();
 }
@@ -810,7 +805,7 @@ void wait_commutation() {
 void start_from_running() {
     // Not quite where we run rc_duty_set normally,
     // but should be fine to drop it in here for now!
-    rc_duty_set(DEBUG_GOTO_POWER);
+    rc_duty_set(MAX_POWER/4);
     switchPowerOff();
     init_comparator();
     greenLedOff();
@@ -843,7 +838,7 @@ void start_from_running() {
 void restart_control() {
     switchPowerOff();
     set_duty = false;
-    rc_duty_set(DEBUG_GOTO_POWER);
+    rc_duty_set(MAX_POWER/4);
     greenLedOn();
     redLedOff();
     // Idle beeping happened here in simonk.
