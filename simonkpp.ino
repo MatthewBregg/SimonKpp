@@ -686,6 +686,7 @@ void rc_duty_set(unsigned short new_rc_duty) {
 // Last_tcnt1_copy = yl/yh/temp7.
 // xl/xh new_duty
 void update_timing4(uint16_t new_duty, uint32_t current_timing_period, uint32_t unused) {
+    current_timing_period &= 0xFFFFFF;
     timing_duty = new_duty;
     // Set timing_l/h/x.
     timing = current_timing_period;

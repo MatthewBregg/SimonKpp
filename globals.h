@@ -42,7 +42,7 @@ constexpr uint8_t START_MOD_INC = 4; // Start power modulation step count increa
 constexpr uint8_t START_FAIL_INC = 16; // start_tries step count increase (wraps in a byte, upon which we disarm)
 constexpr uint8_t START_MOD_LIMIT = 48; // Value at which power is reduced to avoid overheating
 constexpr uint32_t TIMEOUT_START = 10000; // Timeout per commutation for ZC during starting
-constexpr uint32_t TIMING_MAX = 0x011Du; // ; Fixed or safety governor (no less than 0x0080, 321500eRPM).
+constexpr uint32_t TIMING_MAX = 0x023Bu; // ; Fixed or safety governor (no less than 0x0080, 321500eRPM).
 
 // Non Constants
 uint16_t safety_governor = 0x0000u * (cpu_mhz/2);
