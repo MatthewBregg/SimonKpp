@@ -33,7 +33,7 @@ constexpr byte admux_bitmask_to_enable_mux_c = 0x07U;
 constexpr byte cpu_mhz = 16U;
 
 // Do we need to use the various _fast methods, or can we always use the better slow methods?
-constexpr boolean slow_cpu = true;
-constexpr boolean SLOW_CPU = slow_cpu;
+constexpr bool slow_cpu = true;
+constexpr bool SLOW_CPU = slow_cpu;
 
 #endif

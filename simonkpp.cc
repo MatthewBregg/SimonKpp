@@ -1,3 +1,11 @@
+#include <stdint.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#ifndef F_CPU
+#define F_CPU 16000000UL // Must be set to CPU frequency for the util/delay function.
+#endif
+#include <util/delay.h>
+#define byte uint8_t
 #include "atmel.h"
 #include "globals.h"
 #include "commutations.h"
@@ -14,30 +22,6 @@
 //
 // This does not set fuses, we must do so manually if it's a new chip.
 //    With external oscillator: avrdude -U lfuse:w:0x3f:m -U hfuse:w:0xca:m
-void setup() {
-  // put your setup code here, to run once:
-    setDefaultRegisterValues();
-    // Start off with the beepies!
-    beepF1();
-    delay(2000);
-    beepF2();
-    delay(2000);
-    beepF3();
-    delay(2000);
-    beepF4();
-    delay(2000);
-}
-
-void loop() {
-    enableTimerInterrupts();
-    sei();
-    // Delay before starting the fight!
-    delay(2000);
-    //redLedOff();
-    restart_control();
-    return;
-}
-
 byte get_low(const unsigned short in) {
     return 0xFFu & in;
 }
@@ -50,98 +34,21 @@ uint8_t get_byte3(const uint32_t in) {
     return (0xFF0000u & in) >> 16;
 }
 
+// Hacky declariations until we do this right in a .cc/.h file.
+void start_from_running();
+void restart_control();
+void wait_startup();
+void wait_commutation();
+void wait_timeout_init();
+void wait_for_edge1(byte quartered_timing_lower);
+void wait_for_edge();
+void wait_for_edge2(byte quartered_timing_higher, byte quartered_timing_lower);
+void wait_for_edge0();
+void update_timing1(const uint32_t current_timing_period, const uint32_t last_tcnt1_copy);
+void rc_duty_set(unsigned short new_rc_duty);
+void set_new_duty_set(uint16_t rc_duty_copy, uint16_t new_duty);
+void set_new_duty_21(uint16_t rc_duty_copy, uint16_t new_duty, const PWM_STATUS_ENUM next_pwm_status);
 
-void set_ocr1a_rel(const uint32_t timing) {
-    const byte upper = (timing >> 16) & 0xFFu;
-    const unsigned short lower = (timing & 0xFFFFu);
-    set_ocr1a_rel(lower, upper);
-}
-
-// Also careful, inputs are oh god, 1,2,3, 4, y/temp7.
-// Temp4: Degrees
-// 1/2/3: local_timing
-// y/7: com_time.
-// For a quick'n'dirty check that this code did what I think, and what the simonk comment says
-// (which hopefully is what this actually does in simonk!!!), I wrote/ran
-// https://pastebin.com/eVc0asJa
-// returns via y/7.
-// Messing around here:
-// https://pastebin.com/xW8fGFz5
-uint32_t update_timing_add_degrees(uint32_t local_timing,
-uint32_t local_com_time,
- uint8_t degree /* temp4 */) {
-
-   local_com_time += get_high(degree * get_low(local_timing));
-   local_com_time += degree * get_high(local_timing);
-   // TODO: Removing this uint32_t changes the behavior of this function?! Why?
-   local_com_time += (((uint32_t)degree) * ((uint32_t)get_byte3(local_timing))) << 8;
-   return local_com_time & 0xFFFFFFu;
-}
-
-
-void wait_startup() {
-    uint32_t new_timing = START_DELAY_US * ((uint32_t) cpu_mhz);
-    if ( goodies >= 2 ) {
-	const byte degrees = start_delay;
-	const uint32_t start_destep_micros_clock_cycles = START_DSTEP_US * ((uint32_t) cpu_mhz) * 0x100u;
-	new_timing = update_timing_add_degrees(start_destep_micros_clock_cycles, new_timing, degrees);
-    }
-    set_ocr1a_rel(new_timing);
-    wait_OCT1_tot();
-    const uint32_t timeout_cycles = TIMEOUT_START * ((uint32_t) cpu_mhz);
-    set_ocr1a_rel(timeout_cycles);
-
-   // Powered startup: Use a fixed (long) ZC check count until goodies reaches
-   // ENOUGH_GOODIES and the STARTUP flag is cleared.
-    wait_for_edge1(0xFFu * (cpu_mhz/16));
-}
-
-
-uint32_t set_timing_degrees_slow(const byte degree /* temp4 */) {
-    // Loads 24 bits of com_time into y/tmp7, and 24 bits of timing into temp1-3.
-    return update_timing_add_degrees(timing, com_timing, degree);
-
-}
-
-// Should this be returning the new com_time perhaps?
-// Another scary and tricky and bug prone function?
-void set_timing_degrees(const byte degree /* temp4 */) {
-    if ( slow_cpu && timing_fast ) {
-	// WTF is this? Is this just normal 16x16 multiplication? Need to play around with this,
-	// I'm probably seeing the forest for the trees.
-	// TODO(bregg): Look at this again.
-	const unsigned short timing_low_degree_product =
-	    ((unsigned short)get_low(timing)) * ((unsigned short)degree);
-	const unsigned short timing_high_degree_product =
-	    ((unsigned short)get_high(timing)) * ((unsigned short)degree);
-	unsigned short new_com_timing = (com_timing & 0xFFFFu) + get_high(timing_low_degree_product);
-	new_com_timing += timing_high_degree_product;
-	set_ocr1a_abs_fast(new_com_timing);
-    } else {
-	uint32_t new_timing = set_timing_degrees_slow(degree);
-	set_ocr1a_abs_slow(new_timing);
-    }
-
-}
-void wait_OCT1_tot() {
-    do {
-	// Potentially eval_rc, if the EVAL_RC flag is set.
-	// if (eval_rc) { evaluate_rc(); }
-    } while(oct1_pending); // Wait for commutation_time,
-    // an interrupt will eventually flip this, t1oca_int:.
-}
-
-void demag_timeout() {
-    setPwmToNop(); // Stop PWM switching, interrupts will not turn on any fets now!
-    pwm_all_off();
-    redLedOn();
-    // Skip power for the next commutation. Note that this
-    // won't decrease a non-zero powerskip because demag
-    // checking is skipped when powerskip is non-zero.
-    power_skip = 1;
-    wait_commutation();
-    return;
-}
 
 void set_ocr1a_abs_fast(const unsigned short y) {
     const byte ocf1a_mask = getByteWithBitSet(OCF1A);
@@ -159,6 +66,16 @@ void set_ocr1a_abs_fast(const unsigned short y) {
     return;
 
 }
+
+
+void wait_OCT1_tot() {
+    do {
+	// Potentially eval_rc, if the EVAL_RC flag is set.
+	// if (eval_rc) { evaluate_rc(); }
+    } while(oct1_pending); // Wait for commutation_time,
+    // an interrupt will eventually flip this, t1oca_int:.
+}
+
 
 
 // Set OCT1_PENDING until the absolute time specified by YL:YH:temp7 passes.
@@ -227,6 +144,97 @@ void set_ocr1a_zct() {
     }
 }
 
+
+
+void set_ocr1a_rel(unsigned short Y, const byte temp7) {
+    // Compensate for timer increment durring in-add-out
+    // TODO(bregg): Uhoh, this sounds very, very implementation/ASM specific, lol.
+    // Might be a pain with compiled code, will port as is for now, and see about a better solution later.
+    // Perhaps check assembly, although that will be a PITA.
+    // See https://forum.arduino.cc/index.php?topic=50169.0
+    Y+=7; // Manually counted, held at 7 for now!
+    // Isn't OCF1A constant? Can I just combine these?
+    // Oh, I need to load OCF1A into a register before I can out it, which is why temp4 is used.
+    // Leave for now, as we want to load OCF1A into the register first anyway, although I don't think the compiler
+    // needs to respect that wish, so might need to get tweaked anyway based on code generated.
+    // TLDR; I'll need to comback to this.
+    const byte ocf1a_bitmask = getByteWithBitSet(OCF1A); // A
+    cli(); // B
+    Y+=TCNT1; // C // Registers 0xF7/ and 0xFF?
+    OCR1A = Y; // D
+    TIFR = ocf1a_bitmask; // clear any pending interrupts, ideally, this should be 7 cycles from the earlier TCNT1 read.
+    ocr1ax = temp7; // E
+    oct1_pending = true; // F
+    sei(); // G
+    return;
+}
+
+void set_ocr1a_rel(const uint32_t timing) {
+    const byte upper = (timing >> 16) & 0xFFu;
+    const unsigned short lower = (timing & 0xFFFFu);
+    set_ocr1a_rel(lower, upper);
+}
+
+// Also careful, inputs are oh god, 1,2,3, 4, y/temp7.
+// Temp4: Degrees
+// 1/2/3: local_timing
+// y/7: com_time.
+// For a quick'n'dirty check that this code did what I think, and what the simonk comment says
+// (which hopefully is what this actually does in simonk!!!), I wrote/ran
+// https://pastebin.com/eVc0asJa
+// returns via y/7.
+// Messing around here:
+// https://pastebin.com/xW8fGFz5
+uint32_t update_timing_add_degrees(uint32_t local_timing,
+uint32_t local_com_time,
+ uint8_t degree /* temp4 */) {
+
+   local_com_time += get_high(degree * get_low(local_timing));
+   local_com_time += degree * get_high(local_timing);
+   // TODO: Removing this uint32_t changes the behavior of this function?! Why?
+   local_com_time += (((uint32_t)degree) * ((uint32_t)get_byte3(local_timing))) << 8;
+   return local_com_time & 0xFFFFFFu;
+}
+
+
+uint32_t set_timing_degrees_slow(const byte degree /* temp4 */) {
+    // Loads 24 bits of com_time into y/tmp7, and 24 bits of timing into temp1-3.
+    return update_timing_add_degrees(timing, com_timing, degree);
+
+}
+
+// Should this be returning the new com_time perhaps?
+// Another scary and tricky and bug prone function?
+void set_timing_degrees(const byte degree /* temp4 */) {
+    if ( slow_cpu && timing_fast ) {
+	// WTF is this? Is this just normal 16x16 multiplication? Need to play around with this,
+	// I'm probably seeing the forest for the trees.
+	// TODO(bregg): Look at this again.
+	const unsigned short timing_low_degree_product =
+	    ((unsigned short)get_low(timing)) * ((unsigned short)degree);
+	const unsigned short timing_high_degree_product =
+	    ((unsigned short)get_high(timing)) * ((unsigned short)degree);
+	unsigned short new_com_timing = (com_timing & 0xFFFFu) + get_high(timing_low_degree_product);
+	new_com_timing += timing_high_degree_product;
+	set_ocr1a_abs_fast(new_com_timing);
+    } else {
+	uint32_t new_timing = set_timing_degrees_slow(degree);
+	set_ocr1a_abs_slow(new_timing);
+    }
+
+}
+
+void demag_timeout() {
+    setPwmToNop(); // Stop PWM switching, interrupts will not turn on any fets now!
+    pwm_all_off();
+    redLedOn();
+    // Skip power for the next commutation. Note that this
+    // won't decrease a non-zero powerskip because demag
+    // checking is skipped when powerskip is non-zero.
+    power_skip = 1;
+    wait_commutation();
+    return;
+}
 
 void wait_timeout_start() {
     goodies = 0x00u; // Clear good commutation count.
@@ -343,29 +351,6 @@ void wait_pwm_enable() {
     wait_pwm_running();
 }
 
-void set_ocr1a_rel(unsigned short Y, const byte temp7) {
-    // Compensate for timer increment durring in-add-out
-    // TODO(bregg): Uhoh, this sounds very, very implementation/ASM specific, lol.
-    // Might be a pain with compiled code, will port as is for now, and see about a better solution later.
-    // Perhaps check assembly, although that will be a PITA.
-    // See https://forum.arduino.cc/index.php?topic=50169.0
-    Y+=7; // Manually counted, held at 7 for now!
-    // Isn't OCF1A constant? Can I just combine these?
-    // Oh, I need to load OCF1A into a register before I can out it, which is why temp4 is used.
-    // Leave for now, as we want to load OCF1A into the register first anyway, although I don't think the compiler
-    // needs to respect that wish, so might need to get tweaked anyway based on code generated.
-    // TLDR; I'll need to comback to this.
-    const byte ocf1a_bitmask = getByteWithBitSet(OCF1A); // A
-    cli(); // B
-    Y+=TCNT1; // C // Registers 0xF7/ and 0xFF?
-    OCR1A = Y; // D
-    TIFR = ocf1a_bitmask; // clear any pending interrupts, ideally, this should be 7 cycles from the earlier TCNT1 read.
-    ocr1ax = temp7; // E
-    oct1_pending = true; // F
-    sei(); // G
-    return;
-}
-
 void wait_for_low() {
     aco_edge_high = false;
     wait_for_edge();
@@ -383,11 +368,25 @@ void start_failed() {
     while(true) {
 	redLedOff();
 	greenLedOn();
-	delay(8*1000);
+	_delay_ms(2000);
 	redLedOn();
 	greenLedOff();
-	delay(8*1000);
+	_delay_ms(2000);
     }
+}
+
+// If sys_control_copy is less than or equal to the currently determined
+// max_power (local_max_power), then set the real sys_control to sys_control_copy.
+// Otherwise, sys_control is the local_max_power.
+void run6_3(uint16_t sys_control_copy, uint16_t local_max_power) {
+    if ( local_max_power > sys_control_copy ) {
+	sys_control = sys_control_copy;
+    } else {
+	sys_control = local_max_power;
+    }
+    // In simonk, we go to run1 here,
+    // but that won't work so well here, need to structure slightly differntly!
+    return;
 }
 
 void run6_2(uint16_t sys_control_copy) {
@@ -404,20 +403,6 @@ void run6_2(uint16_t sys_control_copy) {
     sys_control_copy += (POWER_RANGE + 31)/32.0;
     // temp1/2 = MAX_POWER
     run6_3(sys_control_copy, MAX_POWER);
-    return;
-}
-
-// If sys_control_copy is less than or equal to the currently determined
-// max_power (local_max_power), then set the real sys_control to sys_control_copy.
-// Otherwise, sys_control is the local_max_power.
-void run6_3(uint16_t sys_control_copy, uint16_t local_max_power) {
-    if ( local_max_power > sys_control_copy ) {
-	sys_control = sys_control_copy;
-    } else {
-	sys_control = local_max_power;
-    }
-    // In simonk, we go to run1 here,
-    // but that won't work so well here, need to structure slightly differntly!
     return;
 }
 
@@ -805,7 +790,7 @@ void wait_commutation() {
 void start_from_running() {
     // Not quite where we run rc_duty_set normally,
     // but should be fine to drop it in here for now!
-    rc_duty_set(MAX_POWER/4);
+    rc_duty_set(MAX_POWER/16);
     switchPowerOff();
     init_comparator();
     greenLedOff();
@@ -838,7 +823,7 @@ void start_from_running() {
 void restart_control() {
     switchPowerOff();
     set_duty = false;
-    rc_duty_set(MAX_POWER/4);
+    rc_duty_set(MAX_POWER/16);
     greenLedOn();
     redLedOff();
     // Idle beeping happened here in simonk.
@@ -914,3 +899,52 @@ void wait_for_edge() {
  ////////////////////////
  // Wait For Edge Here //
  ////////////////////////
+
+
+void wait_startup() {
+    uint32_t new_timing = START_DELAY_US * ((uint32_t) cpu_mhz);
+    if ( goodies >= 2 ) {
+	const byte degrees = start_delay;
+	const uint32_t start_destep_micros_clock_cycles = START_DSTEP_US * ((uint32_t) cpu_mhz) * 0x100u;
+	new_timing = update_timing_add_degrees(start_destep_micros_clock_cycles, new_timing, degrees);
+    }
+    set_ocr1a_rel(new_timing);
+    wait_OCT1_tot();
+    const uint32_t timeout_cycles = TIMEOUT_START * ((uint32_t) cpu_mhz);
+    set_ocr1a_rel(timeout_cycles);
+
+   // Powered startup: Use a fixed (long) ZC check count until goodies reaches
+   // ENOUGH_GOODIES and the STARTUP flag is cleared.
+    wait_for_edge1(0xFFu * (cpu_mhz/16));
+}
+
+
+
+
+int main() {
+    setDefaultRegisterValues();
+    // Start off with the beepies!
+    beepF1();
+    _delay_ms(2000/8);
+    beepF2();
+    _delay_ms(2000/8);
+    beepF3();
+    _delay_ms(2000/8);
+    beepF4();
+    //_delay_ms(2000);
+    while(false) {
+	greenLedOn();
+	_delay_ms(1000);
+	redLedOn();
+	_delay_ms(1000);
+	redLedOff();
+	_delay_ms(1000);
+	greenLedOff();
+	_delay_ms(1000);
+    }
+    while (true) {
+	enableTimerInterrupts();
+	sei();
+	restart_control();
+    }
+}

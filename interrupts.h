@@ -225,7 +225,7 @@ ISR(TIMER1_COMPA_vect) {
 // timer1 overflow interrupt (happens every 4096µs)
 ISR(TIMER1_OVF_vect) {
     ++tcnt1x;
-    if ( (tcnt1x & B1111 /* 15U */ ) == 0 ) {
+    if ( (tcnt1x & 0b1111 /* 15U */ ) == 0 ) {
 	if ( rc_timeout == 0 ) {
 	    // rc_timeout hit, increase the beacon.
 	    ++rct_boot;

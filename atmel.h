@@ -26,7 +26,7 @@ constexpr byte T0CLK = 1U << CS01; // CLK/8 == 2 MHZ.
 constexpr byte T1CLK = 0xC1u;
 constexpr byte T2CLK = 1U << CS20; // (CLK/1) 16 MHZ
 constexpr byte TIMER_INTERRUPTS_ENABLE =  (1U<<TOIE1) | (1U<<OCIE1A) | (1U<<TOIE2);
-constexpr byte UNSIGNED_ZERO = B00000000;
+constexpr byte UNSIGNED_ZERO = 0b00000000;
 
 
 void zeroTCNT0() {
@@ -76,12 +76,12 @@ void setDefaultRegisterValues() {
     /////////////////////////////////////////////
     TCCR0 = T0CLK; // timer0: beep control, delays;
     TCCR1B = T1CLK; // timer1: communtation timing, RC pulse measurement.
-    TCCR2 = B00000000; // timer2: PWM, stopped.
+    TCCR2 = 0b00000000; // timer2: PWM, stopped.
 
 }
 
 constexpr byte getByteWithBitSet(byte bitIndex) {
-    return B00000001 << bitIndex;
+    return 0b00000001 << bitIndex;
 }
 
 constexpr byte getByteWithBitCleared(byte bitIndex) {
