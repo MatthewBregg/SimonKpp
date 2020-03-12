@@ -433,6 +433,9 @@ void run_reverse() {
 	    // TODO: Risk of stack overflow here eventually if we restart control enough?!
 	    // Eventually does it make sense to just make restartControl a loop perhaps?
 	    // Can we replace this with a break perhaps?
+	    //
+	    // Trap here for 4 seconds so it's very noticable when we fail to start.
+	    _delay_ms(4000);
 	    restart_control();
 	    return;
 	}
@@ -618,10 +621,13 @@ void set_new_duty_21(uint16_t rc_duty_copy, uint16_t new_duty, const PWM_STATUS_
     // set_new_duty21:
     new_duty = (new_duty & 0xFF00u) | (~get_low(new_duty) & 0xFFu);
     rc_duty_copy = (rc_duty_copy & 0xFF00u) | (~get_low(rc_duty_copy) & 0xFFu);
-    duty = rc_duty_copy;
     cli();
+    // Duty is set atomically in the ASM, but not promised here!
+    duty = rc_duty_copy;
+    // These must be set atomically!
     off_duty = new_duty;
     PWM_ON_PTR = next_pwm_status;
+    // End set atomically!
     sei();
     return;
 }

@@ -6,6 +6,14 @@
 #define INTERRUPTS_H
 
 
+// Note: Even variables only READ during an interrupt still need to be volatile!!
+// https://stackoverflow.com/questions/55278198/is-volatile-needed-when-variable-is-only-read-during-interrupt
+// I probably want to use atomic_block actually... For all these volatile variables!!!
+// https://www.avrfreaks.net/forum/volatile-variable-access?name=PNphpBB2&file=viewtopic&t=80112
+// Otherwise, the compiler can reorder sei/cli!!
+// http://www.nongnu.org/avr-libc/user-manual/group__util__atomic.html#gaaaea265b31dabcfb3098bec7685c39e4
+
+
 /************************************/
 /* Timer2 Interrpts: PWM Interrupts */
 /************************************/
