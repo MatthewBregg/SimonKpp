@@ -3,7 +3,7 @@
 #ifndef BEEP_H
 #define BEEP_H
 
-void beep(const byte frequency) {
+void beep(const uint8_t frequency) {
     zeroTCNT0();
     //beep 1.
     while ( getTCNT0() < 2*cpu_mhz ) {}
@@ -11,7 +11,7 @@ void beep(const byte frequency) {
     allNFetsOff();
     // Turn off all P side fets.
     allPFetsOff();
-    for (byte countDown = cpu_mhz; countDown != 0; --countDown) {
+    for (uint8_t countDown = cpu_mhz; countDown != 0; --countDown) {
 	// beep 2.
 	zeroTCNT0();
 	// beep 3.
@@ -22,7 +22,7 @@ void beep(const byte frequency) {
 void beepF1() {
     redLedOn();
     // beep_f1_on
-    for ( byte beepDuration = 80U; beepDuration != 0; --beepDuration) {
+    for ( uint8_t beepDuration = 80U; beepDuration != 0; --beepDuration) {
 	BpFetOn();
 	AnFetOn();
 	beep(200U);
@@ -34,7 +34,7 @@ void beepF2() {
     redLedOn();
     greenLedOn();
     // beep_f2_on
-    for ( byte beepDuration = 100U; beepDuration != 0; --beepDuration) {
+    for ( uint8_t beepDuration = 100U; beepDuration != 0; --beepDuration) {
 	CpFetOn();
 	BnFetOn();
 	beep(180U);
@@ -47,7 +47,7 @@ void beepF2() {
 void beepF3() {
     redLedOn();
     // beep_f2_on
-    for ( byte beepDuration = 120U; beepDuration != 0; --beepDuration) {
+    for ( uint8_t beepDuration = 120U; beepDuration != 0; --beepDuration) {
 	ApFetOn();
 	CnFetOn();
 	beep(160U);
@@ -60,7 +60,7 @@ void beepF4() {
     redLedOn();
     greenLedOn();
     // beep_f2_on
-    for ( byte beepDuration = 140U; beepDuration != 0; --beepDuration) {
+    for ( uint8_t beepDuration = 140U; beepDuration != 0; --beepDuration) {
 	CpFetOn();
 	AnFetOn();
 	beep(140U);

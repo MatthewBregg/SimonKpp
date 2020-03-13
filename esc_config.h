@@ -1,3 +1,4 @@
+#include <stdint.h>
 #ifndef ESC_CONFIG_H
 #define ESC_CONFIG_H
 
@@ -13,13 +14,13 @@
 
 
 // Mux config Bools
-constexpr bool mux_a_defined = true;
-constexpr bool mux_b_defined = true;
-constexpr bool mux_c_defined = false;
+constexpr inline bool mux_a_defined = true;
+constexpr inline bool mux_b_defined = true;
+constexpr inline bool mux_c_defined = false;
 
-constexpr byte admux_bitmask_to_enable_mux_a = 0x00U;
-constexpr byte admux_bitmask_to_enable_mux_b = 0x01U;
-constexpr byte admux_bitmask_to_enable_mux_c = 0x07U;
+constexpr inline uint8_t admux_bitmask_to_enable_mux_a = 0x00U;
+constexpr inline uint8_t admux_bitmask_to_enable_mux_b = 0x01U;
+constexpr inline uint8_t admux_bitmask_to_enable_mux_c = 0x07U;
 
 
 // Notes: delayMicroseconds is a NOP loop, no interrupts!
@@ -30,10 +31,10 @@ constexpr byte admux_bitmask_to_enable_mux_c = 0x07U;
 // We went from a prescaler of 64 to 8, so multiply the output of millis() * 8 and it should be accurate.
 // Micros is overflow count + tcnt0, so will NOT be accurate with that method however!
 // We could however, implement our own micros via using the timer0_overflow_count ourself!
-constexpr byte cpu_mhz = 16U;
+constexpr inline uint8_t cpu_mhz = 16U;
 
 // Do we need to use the various _fast methods, or can we always use the better slow methods?
-constexpr bool slow_cpu = true;
-constexpr bool SLOW_CPU = slow_cpu;
+constexpr inline bool slow_cpu = true;
+constexpr inline bool SLOW_CPU = slow_cpu;
 
 #endif

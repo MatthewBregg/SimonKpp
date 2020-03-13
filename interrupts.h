@@ -1,6 +1,7 @@
 
 
 #include "globals.h"
+#include <avr/interrupt.h>
 
 #ifndef INTERRUPTS_H
 #define INTERRUPTS_H
@@ -18,24 +19,24 @@
 /* Timer2 Interrpts: PWM Interrupts */
 /************************************/
 
-void setPwmToOn() {
+inline void setPwmToOn() {
     PWM_STATUS = PWM_ON;
 }
 
 // Equivelent setting ZL to pwm_wdr: in simonk, but we aren't yet using a watchdog.
-void setPwmToNop() {
+inline void setPwmToNop() {
     PWM_STATUS = PWM_NOP;
 }
 
-void setPwmToOff() {
+inline void setPwmToOff() {
     PWM_STATUS = PWM_OFF;
 }
 
-bool isPwmSetToNop() {
+inline bool isPwmSetToNop() {
     return PWM_STATUS == PWM_NOP;
 }
 
-bool isPwmSetToOff() {
+inline bool isPwmSetToOff() {
     return PWM_STATUS == PWM_OFF;
 }
 
@@ -67,21 +68,21 @@ bool isPwmSetToOff() {
 /* ; is longer than will fit in 8 bits. This is tracked in tcnt2h.	     */
 /*****************************************************************************/
 
-void pwm_a_on() {
+inline void pwm_a_on() {
     if (HIGH_SIDE_PWM) {
 	ApFetOn();
     } else {
 	AnFetOn();
     }
 }
-void pwm_b_on() {
+inline void pwm_b_on() {
     if (HIGH_SIDE_PWM) {
 	BpFetOn();
     } else {
 	BnFetOn();
     }
 }
-void pwm_c_on() {
+inline void pwm_c_on() {
     if (HIGH_SIDE_PWM) {
 	CpFetOn();
     } else {
@@ -89,21 +90,21 @@ void pwm_c_on() {
     }
 }
 
-void pwm_a_off() {
+inline void pwm_a_off() {
     if (HIGH_SIDE_PWM) {
 	ApFetOff();
     } else {
 	AnFetOff();
     }
 }
-void pwm_b_off() {
+inline void pwm_b_off() {
     if (HIGH_SIDE_PWM) {
 	BpFetOff();
     } else {
 	BnFetOff();
     }
 }
-void pwm_c_off() {
+inline void pwm_c_off() {
     if (HIGH_SIDE_PWM) {
 	CpFetOff();
     } else {
@@ -111,7 +112,7 @@ void pwm_c_off() {
     }
 }
 
-void pwm_on_high() {
+inline void pwm_on_high() {
     --tcnt2h;
     if ( tcnt2h != 0) {
 	return;
@@ -121,17 +122,17 @@ void pwm_on_high() {
 }
 
 
-void pwm_on_fast_high() {
+inline void pwm_on_fast_high() {
     pwm_on_high();
     return;
 }
 
-void pwm_again() {
+inline void pwm_again() {
     --tcnt2h;
     return;
 }
 
-void pwm_on_fast() {
+inline void pwm_on_fast() {
     if (a_fet) {
 	pwm_a_on();
     }
@@ -151,12 +152,12 @@ void pwm_on_fast() {
     return;
 }
 
-void pwm_on() {
+inline void pwm_on() {
     pwm_on_fast();
     return;
 }
 
-void pwm_off() {
+inline void pwm_off() {
     if ( tcnt2h != 0 ) {
 	pwm_again();
 	return;
@@ -188,7 +189,7 @@ void pwm_off() {
 
 
 // Disable PWM interrupts and turn off all FETS.
-void switchPowerOff() {
+inline void switchPowerOff() {
     disablePWMInterrupts();
     clearPendingPwmInterrupts();
     setPwmToNop();
@@ -201,67 +202,6 @@ void switchPowerOff() {
     AnFetOff();
     BnFetOff();
     CnFetOff();
-}
-
-
-/********************************************/
-/* Timer1 Interrupts: Commutation timing.   */
-/* Timer0 Interrupts: Beep control, delays. */
-/********************************************/
-
-///////////////////////////////////////////////////////////////////////////////////////
-// Interrupt Documentation							     //
-//    http://ee-classes.usc.edu/ee459/library/documents/avr_intr_vectors/	     //
-//    https://arduino.stackexchange.com/questions/32721/interrupts-on-the-arduino-ng //
-// BE VERY CAREFUL ABOUT USING RETURN STATEMENTS in interrupts, see                  //
-// https://www.avrfreaks.net/forum/return-statement-isr                              //
-///////////////////////////////////////////////////////////////////////////////////////
-
-
-//Be sure to check interrupt names for the ATMEGA8 here.
-// https://www.nongnu.org/avr-libc/user-manual/group__avr__interrupts.html#gad28590624d422cdf30d626e0a506255f
-// The LEDs can be used to verify an interrupt works.
-
-// timer1 output compare interrupt
-ISR(TIMER1_COMPA_vect) {
-    if (ocr1ax < 1) {
-	oct1_pending = false; // Passed OCT1A.
-    }
-    --ocr1ax;
-}
-
-// timer1 overflow interrupt (happens every 4096µs)
-ISR(TIMER1_OVF_vect) {
-    ++tcnt1x;
-    if ( (tcnt1x & 0b1111 /* 15U */ ) == 0 ) {
-	if ( rc_timeout == 0 ) {
-	    // rc_timeout hit, increase the beacon.
-	    ++rct_boot;
-	    ++rct_beacon;
-	}
-    }
-}
-
-ISR(TIMER2_OVF_vect) {
-    switch(PWM_STATUS) {
-    case PWM_OFF:
-	pwm_off();
-	break;
-    case PWM_ON:
-	pwm_on();
-	break;
-    case PWM_ON_FAST:
-	pwm_on_fast();
-	break;
-    case PWM_ON_FAST_HIGH:
-	pwm_on_fast_high();
-	break;
-    case PWM_ON_HIGH:
-	pwm_on_high();
-	break;
-    case PWM_NOP:
-	break;
-    }
 }
 
 #endif

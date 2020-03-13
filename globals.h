@@ -1,3 +1,6 @@
+#include <stdint.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
 #include "esc_config.h"
 
 #ifndef GLOBALS_H
@@ -12,7 +15,7 @@
 // SimonK tuning notes: http://torukmakto4.blogspot.com/2018/05/project-t19-part-12-flywheel-drive.html
 
 // Constants
-constexpr inline byte MOTOR_ADVANCE = 13; // Degrees of timing advance (0 - 30, 30 meaning no delay)
+constexpr inline uint8_t MOTOR_ADVANCE = 13; // Degrees of timing advance (0 - 30, 30 meaning no delay)
 constexpr inline bool HIGH_SIDE_PWM = false;
 constexpr inline unsigned short MIN_DUTY = 56 * cpu_mhz/16;
 constexpr inline unsigned short POWER_RANGE = 1500U * cpu_mhz/16 + MIN_DUTY;
@@ -30,10 +33,10 @@ constexpr inline uint16_t TIMING_RANGE2 = 0x2000;
 //1024us per commutation
 constexpr inline uint16_t TIMING_RANGE3 = 0x1000;
 
-constexpr inline byte RCP_TOT = 2U; // Number of 65536us periods before considering rc pulse lost
+constexpr inline uint8_t RCP_TOT = 2U; // Number of 65536us periods before considering rc pulse lost
  // This many start cycles without timeout will transition to running mode
 // (tm4 experimental 05-01-18 - stock 12)
-constexpr inline byte ENOUGH_GOODIES = 6;
+constexpr inline uint8_t ENOUGH_GOODIES = 6;
 constexpr inline unsigned short ZC_CHECK_MIN = 3U;
 //  Number of ZC checkloops under which the PWM noise should not matter.
 constexpr inline unsigned short ZC_CHECK_FAST = 12U;
@@ -81,7 +84,7 @@ inline volatile uint16_t rc_duty = 0x00;
 // Very in depth solution: Go and ensure that these PWM functions are in the lower 8 bits
 // for the function pointer, and then only set that half. But that's tricky and bug prone,
 // and I'd rather just use a slower ut functional solution until the migration to a 32 bit platform.
-enum PWM_STATUS_ENUM : byte {
+enum PWM_STATUS_ENUM : uint8_t {
     PWM_NOP = 0x00,
     PWM_OFF = 0x01,
     PWM_ON = 0x02,
@@ -96,16 +99,16 @@ inline volatile PWM_STATUS_ENUM PWM_ON_PTR = PWM_NOP;
 
 // Timer related
 inline volatile bool oct1_pending = false;
-inline volatile byte ocr1ax = 0; // third byte of OCR1A.
-inline volatile byte tcnt1x = 0; // third byte of TCNT1.
-inline volatile byte tcnt2h = 0; // 2nd byte of tcnt2.
+inline volatile uint8_t ocr1ax = 0; // third byte of OCR1A.
+inline volatile uint8_t tcnt1x = 0; // third byte of TCNT1.
+inline volatile uint8_t tcnt2h = 0; // 2nd byte of tcnt2.
 inline volatile uint32_t last_tcnt1 = 0x00u; // Last Timer1 value.
 inline volatile uint32_t last2_tcnt1 = 0x00u; // Last last Timer1 value.
 
 // RC Timeout values
-inline volatile byte rc_timeout = 0;
-inline volatile byte rct_boot = 0; // Counter which increments while rc_timeout is 0 to jump to boot loader (TODO delete?)
-inline volatile byte rct_beacon = 0; // Counter which increments while rc_timeout is 0 to disarm and beep occasionally (TODO delete?)
+inline volatile uint8_t rc_timeout = 0;
+inline volatile uint8_t rct_boot = 0; // Counter which increments while rc_timeout is 0 to jump to boot loader (TODO delete?)
+inline volatile uint8_t rct_beacon = 0; // Counter which increments while rc_timeout is 0 to disarm and beep occasionally (TODO delete?)
 
 // Motor Driving flags
 inline volatile bool set_duty = false;
@@ -116,9 +119,9 @@ inline volatile bool aco_edge_high = false;
 inline volatile bool timing_fast = false; // Does timing fit in 16 bits?
 
 // Motor timing information.
-inline volatile byte power_skip = 6U;
+inline volatile uint8_t power_skip = 6U;
 // Goodies: Amount of Good zero-cross detections, good commutations, that's all.
-inline volatile byte goodies = 0U;
+inline volatile uint8_t goodies = 0U;
 // Both of these are 24 bits in simonk with _x, we will need to bitmask for the fast methods.
 // Making these 32 bit might not be as efficient, but using 3 bytes is stupid messy,
 // and coercing the compiler to actually make a 24 bit int type seems tricky, so...
@@ -137,10 +140,10 @@ inline volatile bool b_fet = false;
 inline volatile bool c_fet = false;
 
 // Startup vars
-inline volatile byte start_delay = 0x00u;
+inline volatile uint8_t start_delay = 0x00u;
  // Start modulation counter (to reduce heating from PWR_MAX_START if stuck)
-inline volatile byte start_modulate = 0x00u;
+inline volatile uint8_t start_modulate = 0x00u;
 // Number of start_modulate loops for eventual failure and disarm
-inline volatile byte start_fail = 0x00u;
+inline volatile uint8_t start_fail = 0x00u;
 
 #endif

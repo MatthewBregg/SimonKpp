@@ -1,3 +1,4 @@
+#include "byte_manipulation.h"
 #include "esc_config.h"
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Attempt to isolate chip level actions here, with the dream being to swap this file with arm.h, and //
@@ -14,7 +15,7 @@
 
 // T0CLK INFO, for TIMER0
 // Set to increment twice an us, sets CS01 on.
-constexpr byte T0CLK = 1U << CS01; // CLK/8 == 2 MHZ.
+constexpr inline uint8_t T0CLK = 1U << CS01; // CLK/8 == 2 MHZ.
 // T1CLK INFO, for TIMER1
 // Set to increment 16 times a us.
 // Also set the ICNC1 noise cancelling bit, and the ICES1 bit to trigger the interrupt on the rising edge.
@@ -23,25 +24,25 @@ constexpr byte T0CLK = 1U << CS01; // CLK/8 == 2 MHZ.
 // Essentially, on a input capture pin, on a rising/falling pulse, transfer the current value in TCNT1 into
 // input capture register (ICR1), which can then be used in the ISR to measure the prior/next pulse.
 // EX: Clear TCNT1 on the rising edge, and then measure on the known to be coming falling edge.
-constexpr byte T1CLK = 0xC1u;
-constexpr byte T2CLK = 1U << CS20; // (CLK/1) 16 MHZ
-constexpr byte TIMER_INTERRUPTS_ENABLE =  (1U<<TOIE1) | (1U<<OCIE1A) | (1U<<TOIE2);
-constexpr byte UNSIGNED_ZERO = 0b00000000;
+constexpr inline uint8_t T1CLK = 0xC1u;
+constexpr inline uint8_t T2CLK = 1U << CS20; // (CLK/1) 16 MHZ
+constexpr inline uint8_t TIMER_INTERRUPTS_ENABLE =  (1U<<TOIE1) | (1U<<OCIE1A) | (1U<<TOIE2);
+constexpr inline uint8_t UNSIGNED_ZERO = 0b00000000;
 
 
-void zeroTCNT0() {
+inline void zeroTCNT0() {
     TCNT0 = 0x00U;
 }
 
 // Note: With our current prescaler setting,
 // TCNT0 is incremented twice each microsecond.
 // If we reset TCNT0, We can use this to EX, loop for 16 us with while(getTCNT0() < 32) { }...
-byte getTCNT0() {
+inline uint8_t getTCNT0() {
     return TCNT0;
 }
 
 // We want to do this AFTER beeping!
-void enableTimerInterrupts() {
+inline void enableTimerInterrupts() {
     // Note:  Atmega8 only has TIMSK, while ATMEGA328P and co have TIMSK0/1, which makes
     // some docs/code confusing, as the Atmega328P/Atmega8 are often interchanged/considered the same.
     // Well, this is one of those small differences...
@@ -52,13 +53,13 @@ void enableTimerInterrupts() {
 }
 
 // Timer2 is used for PWM, enable it.
-void enablePwmInterrupt() {
+inline void enablePwmInterrupt() {
     // Timer2 Control register, start the timer.
     TCCR2 = T2CLK;
 
 }
 
-void setDefaultRegisterValues() {
+inline void setDefaultRegisterValues() {
     ///////////////////////////////////////////////////
     // Set the I/O registers to safe/default values. //
     ///////////////////////////////////////////////////
@@ -80,14 +81,6 @@ void setDefaultRegisterValues() {
 
 }
 
-constexpr byte getByteWithBitSet(byte bitIndex) {
-    return 0b00000001 << bitIndex;
-}
-
-constexpr byte getByteWithBitCleared(byte bitIndex) {
-    return ~getByteWithBitSet(bitIndex);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // ;-- Analog comparator sense macros --------------------------------------- //
 // ; We enable and disable the ADC to override ACME when one of the sense     //
@@ -96,7 +89,7 @@ constexpr byte getByteWithBitCleared(byte bitIndex) {
 // Analog Comparator Magic: Investigate more later, but for now, just copy    //
 // the bits which get SET.                                                    //
 ////////////////////////////////////////////////////////////////////////////////
-void init_comparator() {
+inline void init_comparator() {
     SFIOR = getByteWithBitSet(ACME) | SFIOR; // Set Analog Comparator Multiplexor Enable
 
     if ( mux_a_defined && mux_b_defined && mux_c_defined) {
@@ -105,11 +98,11 @@ void init_comparator() {
     }
 }
 
-void comp_adc_enable() {
+inline void comp_adc_enable() {
     ADCSRA = ADCSRA | getByteWithBitSet(ADEN);
 }
 
-void comp_adc_disable() {
+inline void comp_adc_disable() {
     // If any muxes are undefined, this must be ran.
     // If no muxes use the AIN1 pin, then we will never have set ADEN
     // to read AIN1, and this doesn't need to be ran.
@@ -122,7 +115,7 @@ void comp_adc_disable() {
 }
 
 // Set the ADC to compare against phase x.
-void set_comp_phase_a() {
+inline void set_comp_phase_a() {
     if (mux_a_defined) {
 	// Set comparator multiplexer to phase a.
 	ADMUX = admux_bitmask_to_enable_mux_a;
@@ -134,7 +127,7 @@ void set_comp_phase_a() {
     }
 }
 
-void set_comp_phase_b() {
+inline void set_comp_phase_b() {
     if (mux_b_defined) {
 	// Set comparator multiplexer to phase a.
 	ADMUX = admux_bitmask_to_enable_mux_b;
@@ -147,7 +140,7 @@ void set_comp_phase_b() {
 }
 
 // Mux C is `undefined` and set to AIN1 on afros_nfe, so we enable the ADC here!
-void set_comp_phase_c() {
+inline void set_comp_phase_c() {
     if (mux_c_defined) {
 	// Set comparator multiplexer to phase a.
 	ADMUX = admux_bitmask_to_enable_mux_c;
@@ -162,12 +155,12 @@ void set_comp_phase_c() {
 /***************************/
 /* Motor Driving Functions */
 /***************************/
-constexpr byte AnFetIdx = 3;
-constexpr byte BnFetIdx = 4;
-constexpr byte CnFetIdx = 5;
-constexpr byte ApFetIdx = 2;
-constexpr byte BpFetIdx = 2;
-constexpr byte CpFetIdx = 1;
+constexpr inline uint8_t AnFetIdx = 3;
+constexpr inline uint8_t BnFetIdx = 4;
+constexpr inline uint8_t CnFetIdx = 5;
+constexpr inline uint8_t ApFetIdx = 2;
+constexpr inline uint8_t BpFetIdx = 2;
+constexpr inline uint8_t CpFetIdx = 1;
 
 
 // In high_side PWM mode, add code to make these be XpFET_PORT.
@@ -177,73 +170,73 @@ constexpr byte CpFetIdx = 1;
 
 
 // xNFets are active high.
-void AnFetOn() {
+inline void AnFetOn() {
     ANFET_PORT = ANFET_PORT | getByteWithBitSet(AnFetIdx);
 }
-void BnFetOn() {
+inline void BnFetOn() {
     BNFET_PORT = BNFET_PORT | getByteWithBitSet(BnFetIdx);
 }
-void CnFetOn() {
+inline void CnFetOn() {
     CNFET_PORT = CNFET_PORT | getByteWithBitSet(CnFetIdx);
 }
 
-void AnFetOff() {
+inline void AnFetOff() {
     ANFET_PORT = ANFET_PORT & getByteWithBitCleared(AnFetIdx);
 }
-void BnFetOff() {
+inline void BnFetOff() {
     BNFET_PORT = BNFET_PORT & getByteWithBitCleared(BnFetIdx);
 }
-void CnFetOff() {
+inline void CnFetOff() {
     CNFET_PORT = CNFET_PORT & getByteWithBitCleared(CnFetIdx);
 }
 
 // xPFets are active low.
-void ApFetOff() {
+inline void ApFetOff() {
     APFET_PORT = APFET_PORT | getByteWithBitSet(ApFetIdx);
 }
-void BpFetOff() {
+inline void BpFetOff() {
     BPFET_PORT = BPFET_PORT | getByteWithBitSet(BpFetIdx);
 }
-void CpFetOff() {
+inline void CpFetOff() {
     CPFET_PORT = CPFET_PORT | getByteWithBitSet(CpFetIdx);
 }
 
-void ApFetOn() {
+inline void ApFetOn() {
     APFET_PORT = APFET_PORT & getByteWithBitCleared(ApFetIdx);
 }
-void BpFetOn() {
+inline void BpFetOn() {
     BPFET_PORT = BPFET_PORT & getByteWithBitCleared(BpFetIdx);
 }
-void CpFetOn() {
+inline void CpFetOn() {
     CPFET_PORT = CPFET_PORT & getByteWithBitCleared(CpFetIdx);
 }
 
-void allPFetsOff() {
+inline void allPFetsOff() {
     ApFetOff();
     BpFetOff();
     CpFetOff();
 }
 
-void allNFetsOff() {
+inline void allNFetsOff() {
     AnFetOff();
     BnFetOff();
     CnFetOff();
 }
 
 // Motor debug output, unimplemented ATM.
-void flagOn() {}
-void flagOff() {}
+inline void flagOn() {}
+inline void flagOff() {}
 
-void sync_on() {}
-void sync_off() {}
+inline void sync_on() {}
+inline void sync_off() {}
 
 // Disable PWM, clear PWM interrupts, stop PWM switching
 
-void disablePWMInterrupts() {
+inline void disablePWMInterrupts() {
 
     TCCR2 = UNSIGNED_ZERO; // Disable PWM interrupts;
 }
-void clearPendingPwmInterrupts() {
+inline void clearPendingPwmInterrupts() {
     TIFR = getByteWithBitSet(TOV2); // Clear pending PWM interrupts
 }
 
@@ -254,16 +247,16 @@ void clearPendingPwmInterrupts() {
 /* SimonK sets PORTC to leave GRN_LED and RED_LED at 0, and */
 /* then flips DDRC to output or not output.		     */
 /************************************************************/
-constexpr byte GRN_LED_INDEX = 2;
-constexpr byte RED_LED_INDEX = 3;
-void greenLedOn() {
+constexpr inline uint8_t GRN_LED_INDEX = 2;
+constexpr inline uint8_t RED_LED_INDEX = 3;
+inline void greenLedOn() {
     // Set pinmode to output.
     DDRC = DDRC | getByteWithBitSet(GRN_LED_INDEX);
     // Set output mode to LOW, not needed as long as this BIT in PORTC
     // is not otherwise clobbered, so comment out.
     // PORTC = PORTC & getByteWithBitCleared(GRN_LED_INDEX);
 }
-void greenLedOff() {
+inline void greenLedOff() {
     // Set pinmode to high impedence.
     DDRC = DDRC & getByteWithBitCleared(GRN_LED_INDEX);
     // Set output mode to high, not needed as we just used DDRC to make
@@ -271,14 +264,14 @@ void greenLedOff() {
     // PORTC = PORTC | getByteWithBitSet(GRN_LED_INDEX);
 }
 
-void redLedOn() {
+inline void redLedOn() {
     // Set pinmode to output.
     DDRC = DDRC | getByteWithBitSet(RED_LED_INDEX);
     // Set output mode to LOW, not needed as long as this BIT in PORTC
     // is not otherwise clobbered, so comment out.
     // PORTC = PORTC & getByteWithBitCleared(RED_LED_INDEX);
 }
-void redLedOff() {
+inline void redLedOff() {
     // Set pinmode to high impedence.
     DDRC = DDRC & getByteWithBitCleared(RED_LED_INDEX);
     // Set output mode to high, not needed as we just used DDRC to make
