@@ -49,6 +49,7 @@ C++FLAGS += -O3
 # LTO is important for code size!!
 # https://eklitzke.org/how-gcc-lto-works
 # https://wiki.debian.org/LTO
+# https://stackoverflow.com/questions/23736507/is-there-a-reason-why-not-to-use-link-time-optimization-lto
 C++FLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -flto
 C++FLAGS += -Wall -std=c++17
 C++FLAGS += -DF_OSC=$(OSC)
