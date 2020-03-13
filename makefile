@@ -40,6 +40,9 @@ OBJECTS = \
 CFLAGS = $(INC)
 CFLAGS += -O3
 CFLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
+# https://stackoverflow.com/questions/15606993/g-optimization-flags-fuse-linker-plugin-vs-fwhole-program
+CFLAGS += -flto
+CFLAGS += -fuse-linker-plugin
 CFLAGS += -Wall -Wstrict-prototypes
 CFLAGS += -DF_OSC=$(OSC)
 CFLAGS += -mmcu=$(MCU)
@@ -51,6 +54,8 @@ C++FLAGS += -O3
 # https://wiki.debian.org/LTO
 # https://stackoverflow.com/questions/23736507/is-there-a-reason-why-not-to-use-link-time-optimization-lto
 C++FLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -flto
+# https://stackoverflow.com/questions/15606993/g-optimization-flags-fuse-linker-plugin-vs-fwhole-program
+C++FLAGS += -fuse-linker-plugin
 C++FLAGS += -Wall -std=c++17
 C++FLAGS += -DF_OSC=$(OSC)
 C++FLAGS += -mmcu=$(MCU)
