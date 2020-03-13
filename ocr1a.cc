@@ -3,12 +3,12 @@
 #include "byte_manipulation.h"
 
 
-void set_ocr1a_abs_fast(const unsigned short y) {
+void set_ocr1a_abs_fast(const uint16_t y) {
     const uint8_t ocf1a_mask = getByteWithBitSet(OCF1A);
     cli();
     OCR1A = y;
     TIFR = ocf1a_mask; // Clear any pending OCF1A interrupt.
-    const unsigned short tcnt1_in = TCNT1;
+    const uint16_t tcnt1_in = TCNT1;
     oct1_pending = true;
     ocr1ax = 0x00U;
     sei();
@@ -43,7 +43,7 @@ void set_ocr1a_abs_slow(const uint32_t new_timing) {
     cli();
     OCR1A = 0x0000FFFFu & new_timing;
     TIFR = ocf1a_mask; // Clear any pending OCF1A interrupts.
-    const unsigned short tcnt1_in = TCNT1;
+    const uint16_t tcnt1_in = TCNT1;
     sei();
     oct1_pending = true;
 
@@ -80,7 +80,7 @@ void set_ocr1a_zct_slow() {
 // Should his be returning the new com time perhaps?
 void set_ocr1a_zct() {
     if ( slow_cpu && timing_fast ) {
-	unsigned short y = ((unsigned short)com_timing) + 2*((unsigned short)timing);
+	uint16_t y = ((uint16_t)com_timing) + 2*((uint16_t)timing);
 	set_ocr1a_abs_fast(y);
     } else {
 	set_ocr1a_zct_slow();
@@ -90,7 +90,7 @@ void set_ocr1a_zct() {
 
 
 
-void set_ocr1a_rel(unsigned short Y, const uint8_t temp7) {
+void set_ocr1a_rel(uint16_t Y, const uint8_t temp7) {
     // Compensate for timer increment durring in-add-out
     // TODO(bregg): Uhoh, this sounds very, very implementation/ASM specific, lol.
     // Might be a pain with compiled code, will port as is for now, and see about a better solution later.

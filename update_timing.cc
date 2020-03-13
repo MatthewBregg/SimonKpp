@@ -14,7 +14,7 @@ void update_timing() {
     // Load TCNT1H into temp2
     // Load tcnt1x -> temp3.
     // Load TIFR into temp4
-    unsigned short tcnt1_copy = TCNT1;
+    uint16_t tcnt1_copy = TCNT1;
     uint8_t tcnt1x_copy = tcnt1x;
     uint8_t tifr_copy = TIFR;
     // We've loaded our values without worrying about interrupts,

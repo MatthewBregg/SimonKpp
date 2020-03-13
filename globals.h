@@ -17,13 +17,13 @@
 // Constants
 constexpr inline uint8_t MOTOR_ADVANCE = 13; // Degrees of timing advance (0 - 30, 30 meaning no delay)
 constexpr inline bool HIGH_SIDE_PWM = false;
-constexpr inline unsigned short MIN_DUTY = 56 * cpu_mhz/16;
-constexpr inline unsigned short POWER_RANGE = 1500U * cpu_mhz/16 + MIN_DUTY;
-constexpr inline unsigned short PWR_MAX_RPM1 = (POWER_RANGE/6); //  Power limit when running slower than TIMING_RANGE1
-constexpr inline unsigned short MAX_POWER = POWER_RANGE-1;
-constexpr inline unsigned short PWR_MIN_START = POWER_RANGE/6; // Power limit while starting (to start)
-constexpr inline unsigned short PWR_MAX_START = POWER_RANGE/6; // Power limit while starting (if still not running)
-constexpr inline unsigned short PWR_COOL_START = (POWER_RANGE/24); // Power limit while starting to reduce heating
+constexpr inline uint16_t MIN_DUTY = 56 * cpu_mhz/16;
+constexpr inline uint16_t POWER_RANGE = 1500U * cpu_mhz/16 + MIN_DUTY;
+constexpr inline uint16_t PWR_MAX_RPM1 = (POWER_RANGE/6); //  Power limit when running slower than TIMING_RANGE1
+constexpr inline uint16_t MAX_POWER = POWER_RANGE-1;
+constexpr inline uint16_t PWR_MIN_START = POWER_RANGE/6; // Power limit while starting (to start)
+constexpr inline uint16_t PWR_MAX_START = POWER_RANGE/6; // Power limit while starting (if still not running)
+constexpr inline uint16_t PWR_COOL_START = (POWER_RANGE/24); // Power limit while starting to reduce heating
 // 8192us per commutation
 constexpr inline uint16_t TIMING_MIN = 0x8000;
  // tm4 change - start ramping duty earlier due to less PWR_MAX_RPM1 (stock 0x4000 - 4096us per commutation)
@@ -37,12 +37,12 @@ constexpr inline uint8_t RCP_TOT = 2U; // Number of 65536us periods before consi
  // This many start cycles without timeout will transition to running mode
 // (tm4 experimental 05-01-18 - stock 12)
 constexpr inline uint8_t ENOUGH_GOODIES = 6;
-constexpr inline unsigned short ZC_CHECK_MIN = 3U;
+constexpr inline uint16_t ZC_CHECK_MIN = 3U;
 //  Number of ZC checkloops under which the PWM noise should not matter.
-constexpr inline unsigned short ZC_CHECK_FAST = 12U;
-constexpr inline unsigned short ZC_CHECK_MAX = POWER_RANGE/32; // Limit ZC checking to about 1/2 PWM interval
-constexpr inline unsigned short MASKED_ZC_CHECK_MIN = 0x00FFu & ZC_CHECK_MIN;
-constexpr inline unsigned short MASKED_ZC_CHECK_MAX = 0x00FFu & ZC_CHECK_MAX;
+constexpr inline uint16_t ZC_CHECK_FAST = 12U;
+constexpr inline uint16_t ZC_CHECK_MAX = POWER_RANGE/32; // Limit ZC checking to about 1/2 PWM interval
+constexpr inline uint16_t MASKED_ZC_CHECK_MIN = 0x00FFu & ZC_CHECK_MIN;
+constexpr inline uint16_t MASKED_ZC_CHECK_MAX = 0x00FFu & ZC_CHECK_MAX;
 
 constexpr inline uint32_t START_DELAY_US = 0x00u; // Initial post-commutation wait during starting
 constexpr inline uint32_t START_DELAY_INC = 15; // Wait step count increase (wraps in a byte)

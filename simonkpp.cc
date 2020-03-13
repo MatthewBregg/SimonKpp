@@ -31,7 +31,7 @@ void wait_startup();
 void wait_commutation();
 void wait_timeout_init();
 void update_timing1(const uint32_t current_timing_period, const uint32_t last_tcnt1_copy);
-void rc_duty_set(unsigned short new_rc_duty);
+void rc_duty_set(uint16_t new_rc_duty);
 void set_new_duty_set(uint16_t rc_duty_copy, uint16_t new_duty);
 void set_new_duty_21(uint16_t rc_duty_copy, uint16_t new_duty, const PWM_STATUS_ENUM next_pwm_status);
 
@@ -258,7 +258,7 @@ void set_new_duty() {
 // Sets the speed that the ESC will try to rev to!
 // Takes PARAM in YL/YH.
 // Set YL/YH to MAX_POWER for full power, or 0 for off.
-void rc_duty_set(unsigned short new_rc_duty) {
+void rc_duty_set(uint16_t new_rc_duty) {
     rc_duty = new_rc_duty;
     if (set_duty) {
 	rc_timeout = RCP_TOT;

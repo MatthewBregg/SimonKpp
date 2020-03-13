@@ -50,7 +50,7 @@ void wait_for_edge_below_max(uint8_t quartered_timing_lower) {
 
 void wait_for_edge0() {
     // We take the two high  bytes of timing, and then left shift twice!
-    unsigned short quartered_timing =  ((timing >> 8) & 0xFFFF) >> 2;
+    uint16_t quartered_timing =  ((timing >> 8) & 0xFFFF) >> 2;
     if ( quartered_timing <  MASKED_ZC_CHECK_MIN ) {
 	wait_for_edge_fast_min();
 	return;
@@ -83,7 +83,7 @@ void wait_for_edge() {
 	wait_for_edge0();
 	return;
     }
-    unsigned short Y = (0xFFU * 0x100U);
+    uint16_t Y = (0xFFU * 0x100U);
     set_ocr1a_rel(Y, 0x00U);
     // xl = ZC_CHECK_MIN.
     wait_for_edge1(MASKED_ZC_CHECK_MIN);

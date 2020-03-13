@@ -13,9 +13,9 @@ inline void wait_OCT1_tot() {
 
 
 
-void set_ocr1a_abs_fast(const unsigned short y);
+void set_ocr1a_abs_fast(const uint16_t y);
 void set_ocr1a_abs_slow(const uint32_t new_timing);
 void set_ocr1a_zct();
 void set_ocr1a_rel(const uint32_t timing);
-void set_ocr1a_rel(unsigned short Y, const uint8_t temp7);
+void set_ocr1a_rel(uint16_t Y, const uint8_t temp7);
 #endif

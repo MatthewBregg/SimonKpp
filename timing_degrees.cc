@@ -37,11 +37,11 @@ void set_timing_degrees(const uint8_t degree /* temp4 */) {
 	// WTF is this? Is this just normal 16x16 multiplication? Need to play around with this,
 	// I'm probably seeing the forest for the trees.
 	// TODO(bregg): Look at this again.
-	const unsigned short timing_low_degree_product =
-	    ((unsigned short)get_low(timing)) * ((unsigned short)degree);
-	const unsigned short timing_high_degree_product =
-	    ((unsigned short)get_high(timing)) * ((unsigned short)degree);
-	unsigned short new_com_timing = (com_timing & 0xFFFFu) + get_high(timing_low_degree_product);
+	const uint16_t timing_low_degree_product =
+	    ((uint16_t)get_low(timing)) * ((uint16_t)degree);
+	const uint16_t timing_high_degree_product =
+	    ((uint16_t)get_high(timing)) * ((uint16_t)degree);
+	uint16_t new_com_timing = (com_timing & 0xFFFFu) + get_high(timing_low_degree_product);
 	new_com_timing += timing_high_degree_product;
 	set_ocr1a_abs_fast(new_com_timing);
     } else {
