@@ -53,6 +53,7 @@ C++FLAGS += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -fl
 C++FLAGS += -Wall -std=c++17
 C++FLAGS += -DF_OSC=$(OSC)
 C++FLAGS += -mmcu=$(MCU)
+C++FLAGS += -fno-exceptions
 
 ASMFLAGS = $(INC)
 ASMFLAGS += -Os
@@ -77,7 +78,7 @@ flash: $(PROJECT).hex
 %.o : %.$(EXT_C)
 	$(GCC) $< $(CFLAGS) -c -o $@
 
-%.o : %.$(EXT_C++)
+%.o : %.$(EXT_C++) *.h
 	$(G++) $< $(C++FLAGS) -c -o $@
 
 %.o : %.$(EXT_ASM)
