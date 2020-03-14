@@ -18,7 +18,7 @@
 constexpr inline uint8_t MOTOR_ADVANCE = 13; // Degrees of timing advance (0 - 30, 30 meaning no delay)
 constexpr inline bool HIGH_SIDE_PWM = false;
 constexpr inline uint16_t MIN_DUTY = 56 * cpu_mhz/16;
-constexpr inline uint16_t POWER_RANGE = 1500U * cpu_mhz/16 + MIN_DUTY;
+constexpr inline uint16_t POWER_RANGE = 800U * cpu_mhz/16 + MIN_DUTY;
 constexpr inline uint16_t PWR_MAX_RPM1 = (POWER_RANGE/6); //  Power limit when running slower than TIMING_RANGE1
 constexpr inline uint16_t MAX_POWER = POWER_RANGE-1;
 constexpr inline uint16_t PWR_MIN_START = POWER_RANGE/6; // Power limit while starting (to start)
@@ -73,29 +73,18 @@ inline uint16_t timing_duty = 0; // timing duty limit.
 // How much the RC command is telling us to peg the throttle at?
 inline uint16_t rc_duty = 0x00;
 
-// The PWM interrupt uses this byte to determine which action to take.
-// Why an enum and not a function pointer? An enum should be 8 bits,
-// and therefore loaded/mutated atomically, but a function pointer
-// in AVR will be 16, so I then need to worry about ZL/ZH being out of sync.
-// Then again, maybe I should just use the atomic type?
-// Update: This looks slow as fuck based on godbolt.
-// It's compiling to a series of cpi/breqs.
-// Solution: Function pointer, wrap the sets in SEI/CLI.
+// The PWM interrupt uses this ptr to determine which action to take.
 // Very in depth solution: Go and ensure that these PWM functions are in the lower 8 bits
 // for the function pointer, and then only set that half. But that's tricky and bug prone,
 // and I'd rather just use a slower ut functional solution until the migration to a 32 bit platform.
-enum PWM_STATUS_ENUM : uint8_t {
-    PWM_NOP = 0x00,
-    PWM_OFF = 0x01,
-    PWM_ON = 0x02,
-    PWM_ON_FAST = 0x03,
-    PWM_ON_FAST_HIGH = 0x04,
-    PWM_ON_HIGH = 0x05
-};
-inline volatile PWM_STATUS_ENUM PWM_STATUS = PWM_NOP;
+
+// Provide a sane default to this ptr.
+inline void do_nothing() {
+}
+inline void(* volatile pwm_ptr)(void) = &do_nothing;
 // This looks to be set as part of eval RC, so make sure this happens!
 // AKA, I need to run set_new_duty!!
-inline volatile PWM_STATUS_ENUM PWM_ON_PTR = PWM_NOP;
+inline void(* volatile pwm_on_ptr)(void) = &do_nothing;
 
 // Timer related
 inline volatile bool oct1_pending = false;

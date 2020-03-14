@@ -40,23 +40,5 @@ ISR(TIMER1_OVF_vect) {
 }
 
 ISR(TIMER2_OVF_vect) {
-    switch(PWM_STATUS) {
-    case PWM_OFF:
-	pwm_off();
-	break;
-    case PWM_ON:
-	pwm_on();
-	break;
-    case PWM_ON_FAST:
-	pwm_on_fast();
-	break;
-    case PWM_ON_FAST_HIGH:
-	pwm_on_fast_high();
-	break;
-    case PWM_ON_HIGH:
-	pwm_on_high();
-	break;
-    case PWM_NOP:
-	break;
-    }
+    pwm_ptr();
 }

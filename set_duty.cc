@@ -1,10 +1,11 @@
 #include "set_duty.h"
 #include "globals.h"
 #include "byte_manipulation.h"
+#include "interrupts.h"
 
 
 // rc_duty_copy = yl/yh, new_duty = temp1/2.
-void set_new_duty_21(uint16_t rc_duty_copy, uint16_t new_duty, const PWM_STATUS_ENUM next_pwm_status) {
+void set_new_duty_21(uint16_t rc_duty_copy, uint16_t new_duty, void(* const next_pwm_status)(void)) {
     // set_new_duty21:
     new_duty = (new_duty & 0xFF00u) | (~get_low(new_duty) & 0xFFu);
     rc_duty_copy = (rc_duty_copy & 0xFF00u) | (~get_low(rc_duty_copy) & 0xFFu);
@@ -13,7 +14,7 @@ void set_new_duty_21(uint16_t rc_duty_copy, uint16_t new_duty, const PWM_STATUS_
     duty = rc_duty_copy;
     // These must be set atomically!
     off_duty = new_duty;
-    PWM_ON_PTR = next_pwm_status;
+    pwm_on_ptr = next_pwm_status;
     // End set atomically!
     sei();
     return;
@@ -61,7 +62,7 @@ void set_new_duty_l(uint16_t rc_duty_copy) {
     if ( rc_duty_copy == 0 ) {
 	full_power = false;
 	power_on = false;
-	set_new_duty_21(rc_duty_copy, new_duty, PWM_OFF);
+	set_new_duty_21(rc_duty_copy, new_duty, &pwm_off);
 	return;
     }
     // Not off, and not full power
@@ -82,9 +83,9 @@ void set_new_duty_l(uint16_t rc_duty_copy) {
 // rc_duty_copy = yl/yh, new_duty = temp1/2.
 void set_new_duty_set(uint16_t rc_duty_copy, uint16_t new_duty) {
     // set_new_duty_set:
-    PWM_STATUS_ENUM next_pwm_status = PWM_ON; // Off period < 0x100
+    void (*next_pwm_status)() = &pwm_on; // Off period <0x100
     if ( (new_duty & 0xFF00u) != 0 ) { // Is the upper byte of new_duty 0?
-	next_pwm_status = PWM_ON_HIGH; // Off period >= 0x100.
+	next_pwm_status = &pwm_on_high; // Off period >= 0x100.
     }
     set_new_duty_21(rc_duty_copy, new_duty, next_pwm_status);
     return;

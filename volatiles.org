@@ -15,9 +15,8 @@ off_duty
 ** written:
 rct_boot
 rct_beacon
-TCNT2
 
-All the fet ports.
+All the fet ports, TCNT2
 
 ** read/written
 tcnt1x

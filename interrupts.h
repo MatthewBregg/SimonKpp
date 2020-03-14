@@ -2,6 +2,8 @@
 
 #include "globals.h"
 #include <avr/interrupt.h>
+#include "atmel.h"
+#include <util/atomic.h>
 
 #ifndef INTERRUPTS_H
 #define INTERRUPTS_H
@@ -19,28 +21,25 @@
 /* Timer2 Interrpts: PWM Interrupts */
 /************************************/
 
-inline void setPwmToOn() {
-    PWM_STATUS = PWM_ON;
+void pwm_on();
+void pwm_off();
+inline void set_pwm_to_on_non_atomic() {
+    pwm_ptr = &pwm_on;
 }
-
 // Equivelent setting ZL to pwm_wdr: in simonk, but we aren't yet using a watchdog.
-inline void setPwmToNop() {
-    PWM_STATUS = PWM_NOP;
+inline void set_pwm_to_nop_non_atomic() {
+    pwm_ptr = &do_nothing;
+}
+inline void set_pwm_to_off_non_atomic() {
+    pwm_ptr = &pwm_off;
 }
 
-inline void setPwmToOff() {
-    PWM_STATUS = PWM_OFF;
+// Inline functions should have the same addr.
+// https://stackoverflow.com/questions/19134124/are-two-function-pointers-to-the-same-function-always-equal
+inline bool is_pwm_set_to_nop_non_atomic() {
+    return pwm_ptr == &do_nothing;
 }
 
-inline bool isPwmSetToNop() {
-    return PWM_STATUS == PWM_NOP;
-}
-
-inline bool isPwmSetToOff() {
-    return PWM_STATUS == PWM_OFF;
-}
-
-// Actual PWM interrupt bodies.
 
 // Copying the comment from simonk.
 /*****************************************************************************/
@@ -117,7 +116,7 @@ inline void pwm_on_high() {
     if ( tcnt2h != 0) {
 	return;
     }
-    setPwmToOn();
+    set_pwm_to_on_non_atomic();
     return;
 }
 
@@ -143,7 +142,7 @@ inline void pwm_on_fast() {
     if (c_fet) {
 	pwm_c_on();
     }
-    setPwmToOff();
+    set_pwm_to_off_non_atomic();
     // Now reset the '16' bit timer2 to duty
     // H is the high byte
     tcnt2h = ((0xFF00u & duty) >> 8);
@@ -166,7 +165,7 @@ inline void pwm_off() {
 	pwm_on(); // If full power, simply jump to keeping PWM_ON.
 	return;
     }
-    PWM_STATUS = PWM_ON_PTR;
+    pwm_ptr = pwm_on_ptr;
     tcnt2h = ((off_duty & 0xFF00) >> 8);
 
     // Turn fets off now.
@@ -186,13 +185,13 @@ inline void pwm_off() {
 }
 
 
-
-
 // Disable PWM interrupts and turn off all FETS.
 inline void switchPowerOff() {
     disablePWMInterrupts();
     clearPendingPwmInterrupts();
-    setPwmToNop();
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+	set_pwm_to_nop_non_atomic();
+    }
     // Switch all fets off.
     // Turn off all pFets
     ApFetOff();

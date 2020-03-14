@@ -7,9 +7,12 @@
 #include "interrupts.h"
 #include "update_timing.h"
 #include "commutations.h"
+#include <util/atomic.h>
 
 void demag_timeout() {
-    setPwmToNop(); // Stop PWM switching, interrupts will not turn on any fets now!
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+	set_pwm_to_nop_non_atomic(); // Stop PWM switching, interrupts will not turn on any fets now!
+    }
     pwm_all_off();
     redLedOn();
     // Skip power for the next commutation. Note that this
@@ -159,9 +162,12 @@ void wait_pwm_running() {
 }
 
 void wait_pwm_enable() {
-    if (isPwmSetToNop() ) {
-	setPwmToOff();
-	redLedOff();
+
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+	if (is_pwm_set_to_nop_non_atomic() ) {
+	    set_pwm_to_off_non_atomic();
+	    redLedOff();
+	}
     }
     wait_pwm_running();
 }
