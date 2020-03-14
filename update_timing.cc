@@ -4,6 +4,7 @@
 #include "byte_manipulation.h"
 #include "timing_degrees.h"
 #include "ocr1a.h"
+#include "set_duty.h"
 
 
 // Time for the dragon: UPDATE TIMING.

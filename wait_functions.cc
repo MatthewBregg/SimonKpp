@@ -2,6 +2,7 @@
 #include "ocr1a.h"
 #include "timing_degrees.h"
 #include <avr/io.h>
+#include "control.h"
 #include "atmel.h"
 #include "interrupts.h"
 #include "update_timing.h"
@@ -183,13 +184,6 @@ void wait_commutation() {
     }
 
 
-}
-
-// Leave running mode and update timing/duty.
-void wait_timeout_init() {
-    startup = true;
-    wait_commutation();
-    return;
 }
 
 

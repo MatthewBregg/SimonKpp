@@ -2,6 +2,10 @@
 
 #ifndef BYTE_MANIPULATION_H
 #define BYTE_MANIPULATION_H
+// TODO: Replace these
+// get_low/get_high/etc with macros/union from
+// https://www.avrfreaks.net/forum/c-programming-how-split-int16-bits-2-char8bit,
+// which appears to generate much more efficient code.
 
 inline constexpr uint8_t getByteWithBitSet(uint8_t bitIndex) {
     return 0b00000001 << bitIndex;
