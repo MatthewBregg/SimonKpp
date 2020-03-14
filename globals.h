@@ -15,7 +15,7 @@
 // SimonK tuning notes: http://torukmakto4.blogspot.com/2018/05/project-t19-part-12-flywheel-drive.html
 
 // Constants
-constexpr inline uint8_t MOTOR_ADVANCE = 13; // Degrees of timing advance (0 - 30, 30 meaning no delay)
+constexpr inline uint8_t MOTOR_ADVANCE = 17; // Degrees of timing advance (0 - 30, 30 meaning no delay)
 constexpr inline bool HIGH_SIDE_PWM = false;
 constexpr inline uint16_t MIN_DUTY = 56 * cpu_mhz/16;
 constexpr inline uint16_t POWER_RANGE = 1500U * cpu_mhz/16 + MIN_DUTY;
