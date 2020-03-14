@@ -6,8 +6,8 @@
 // rc_duty_copy = yl/yh, new_duty = temp1/2.
 void set_new_duty_21(uint16_t rc_duty_copy, uint16_t new_duty, const PWM_STATUS_ENUM next_pwm_status) {
     // set_new_duty21:
-    new_duty = (new_duty & 0xFF00u) | (~get_low(new_duty) & 0xFFu);
-    rc_duty_copy = (rc_duty_copy & 0xFF00u) | (~get_low(rc_duty_copy) & 0xFFu);
+    new_duty = (new_duty & 0xFF00u) | ((uint8_t)~get_low(new_duty));
+    rc_duty_copy = (rc_duty_copy & 0xFF00u) | ((uint8_t)~get_low(rc_duty_copy));
     cli();
     // Duty is set atomically in the ASM, but not promised here!
     duty = rc_duty_copy;

@@ -126,15 +126,18 @@ void wait_for_edge2(uint8_t quartered_timing_higher, uint8_t quartered_timing_lo
 }
 
 void wait_startup() {
-    uint32_t new_timing = START_DELAY_US * ((uint32_t) cpu_mhz);
-    if ( goodies >= 2 ) {
-	const uint8_t degrees = start_delay;
-	constexpr uint32_t start_destep_micros_clock_cycles = START_DSTEP_US * ((uint32_t) cpu_mhz) * 0x100u;
-	new_timing = update_timing_add_degrees(start_destep_micros_clock_cycles, new_timing, degrees);
+    {
+	constexpr uint32_t new_timing = START_DELAY_US * ((uint32_t) cpu_mhz);
+	if ( goodies >= 2 ) {
+	    const uint8_t degrees = start_delay;
+	    constexpr uint32_t start_destep_micros_clock_cycles = START_DSTEP_US * ((uint32_t) cpu_mhz) * 0x100u;
+	    set_ocr1a_rel(update_timing_add_degrees(start_destep_micros_clock_cycles, new_timing, degrees));
+	} else {
+	    set_ocr1a_rel(new_timing);
+	}
     }
-    set_ocr1a_rel(new_timing);
     wait_OCT1_tot();
-    const uint32_t timeout_cycles = TIMEOUT_START * ((uint32_t) cpu_mhz);
+    constexpr uint32_t timeout_cycles = TIMEOUT_START * ((uint32_t) cpu_mhz);
     set_ocr1a_rel(timeout_cycles);
 
    // Powered startup: Use a fixed (long) ZC check count until goodies reaches

@@ -74,14 +74,20 @@ void set_ocr1a_abs_slow(const uint32_t new_timing) {
 
 void set_ocr1a_zct_slow() {
     // Loads 24 bits of com_time into y/tmp7, and 24 bits of timing into temp1-3.
-    set_ocr1a_abs_slow(timing*2 + com_timing);
+    uint32_t y = com_timing;
+    y += timing;
+    y += timing;
+    y &= 0xFFFFFF;
+    set_ocr1a_abs_slow(y);
     return;
 }
 
 // Should his be returning the new com time perhaps?
 void set_ocr1a_zct() {
     if ( slow_cpu && timing_fast ) {
-	uint16_t y = ((uint16_t)com_timing) + 2*((uint16_t)timing);
+        uint16_t y = com_timing;
+        y += timing;
+        y += timing;
 	set_ocr1a_abs_fast(y);
     } else {
 	set_ocr1a_zct_slow();
