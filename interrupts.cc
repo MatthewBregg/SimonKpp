@@ -22,7 +22,7 @@
 // timer1 output compare interrupt
 ISR(TIMER1_COMPA_vect) {
     if (ocr1ax < 1) {
-	oct1_pending = false; // Passed OCT1A.
+	flag_1 &= byte_index_off(OCT1_PENDING_IDX);
     }
     --ocr1ax;
 }

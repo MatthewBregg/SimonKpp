@@ -140,7 +140,6 @@ constexpr inline uint8_t C_FET_IDX = 3;
 constexpr inline uint8_t FULL_POWER_IDX = 4;
 // Timer related
 constexpr inline uint8_t OCT1_PENDING_IDX = 5;
-inline volatile bool oct1_pending = false;
 inline volatile uint8_t flag_1 = 0x00; // Contains a_fet, b_fet, c_fet, and full_power, and oct1_pending.
 
 // Startup vars

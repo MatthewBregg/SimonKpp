@@ -23,7 +23,7 @@ void demag_timeout() {
 void wait_for_demag() {
     do {
 	// If we don't have an oct1_pending, go to demag_timeout.
-	if (!oct1_pending) {
+	if (!(flag_1 & byte_index_on(OCT1_PENDING_IDX))) {
 	    demag_timeout();
 	    return;
 	}
@@ -96,7 +96,7 @@ void wait_for_edge2(uint8_t quartered_timing_higher, uint8_t quartered_timing_lo
     bool opposite_level;
     do {
 	// If OCT1_pending, we need to go to wait_timeout.
-	if (!oct1_pending) {
+	if (!(flag_1 & byte_index_on(OCT1_PENDING_IDX))) {
 	    wait_timeout(quartered_timing_higher,quartered_timing_lower);
 	    return;
 	}

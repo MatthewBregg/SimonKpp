@@ -9,13 +9,13 @@ void set_ocr1a_abs_fast(const uint16_t y) {
     OCR1A = y;
     TIFR = ocf1a_mask; // Clear any pending OCF1A interrupt.
     const uint16_t tcnt1_in = TCNT1;
-    oct1_pending = true;
+    flag_1 |= byte_index_on(OCT1_PENDING_IDX);
     ocr1ax = 0x00U;
     sei();
     if (y >= tcnt1_in) {
 	return;
     }
-    oct1_pending = false;
+    flag_1 &= byte_index_off(OCT1_PENDING_IDX);
     return;
 
 }
@@ -45,7 +45,7 @@ void set_ocr1a_abs_slow(const uint32_t new_timing) {
     TIFR = ocf1a_mask; // Clear any pending OCF1A interrupts.
     const uint16_t tcnt1_in = TCNT1;
     sei();
-    oct1_pending = true;
+    flag_1 |= byte_index_on(OCT1_PENDING_IDX);
 
     uint8_t tcnt1x_copy = tcnt1x;
     const uint8_t tifr_orig = TIFR;
@@ -67,7 +67,9 @@ void set_ocr1a_abs_slow(const uint32_t new_timing) {
 	TIMSK = original_timsk;
 	return;
     }
-    oct1_pending = false;
+
+    flag_1 &= byte_index_off(OCT1_PENDING_IDX);
+
     TIMSK = original_timsk;
     return;
 }
@@ -109,7 +111,7 @@ void set_ocr1a_rel(uint16_t Y, const uint8_t temp7) {
     OCR1A = Y; // D
     TIFR = ocf1a_bitmask; // clear any pending interrupts, ideally, this should be 7 cycles from the earlier TCNT1 read.
     ocr1ax = temp7; // E
-    oct1_pending = true; // F
+    flag_1 |= byte_index_on(OCT1_PENDING_IDX); // F
     sei(); // G
     return;
 }

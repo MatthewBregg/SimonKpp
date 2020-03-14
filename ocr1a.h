@@ -1,4 +1,5 @@
 #include "globals.h"
+#include "byte_manipulation.h"
 
 #ifndef OCR1A_H
 #define OCR1A_H
@@ -7,7 +8,7 @@ inline void wait_OCT1_tot() {
     do {
 	// Potentially eval_rc, if the EVAL_RC flag is set.
 	// if (eval_rc) { evaluate_rc(); }
-    } while(oct1_pending); // Wait for commutation_time,
+    } while(flag_1 & byte_index_on(OCT1_PENDING_IDX)); // Wait for commutation_time,
     // an interrupt will eventually flip this, t1oca_int:.
 }
 
