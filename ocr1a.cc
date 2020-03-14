@@ -103,7 +103,7 @@ void set_ocr1a_rel(uint16_t Y, const uint8_t temp7) {
     // Might be a pain with compiled code, will port as is for now, and see about a better solution later.
     // Perhaps check assembly, although that will be a PITA.
     // See https://forum.arduino.cc/index.php?topic=50169.0
-    Y+=7; // Manually counted, held at 7 for now!
+    Y+=9; // Manually counted, held at 9 for now!
     // Isn't OCF1A constant? Can I just combine these?
     // Oh, I need to load OCF1A into a register before I can out it, which is why temp4 is used.
     // Leave for now, as we want to load OCF1A into the register first anyway, although I don't think the compiler

@@ -9,6 +9,10 @@
 # See also
 # https://blog.podkalicki.com/how-to-compile-and-burn-the-code-to-avr-chip-on-linuxmacosxwindows/
 
+# To get assembly output for debug,
+# avr-g++ -Wa,-adhln -ggdb  -O3 -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums -Wall -std=c++17 -DF_OSC=16000000UL  -mmcu=atmega8  -fno-exceptions  *.cc | less
+
+
 
 # Hardware
 MCU     = atmega8 # see `make show-mcu`
