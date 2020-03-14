@@ -53,19 +53,19 @@ void set_new_duty_l(uint16_t rc_duty_copy) {
     // Calculate OFF duty.
     new_duty -= rc_duty_copy;
     if (new_duty == 0) {
-	full_power = true;
+	flag_1 |= byte_index_on(FULL_POWER_IDX);
 	power_on = true;
 	set_new_duty_set(rc_duty_copy, new_duty);
 	return;
     }
     if ( rc_duty_copy == 0 ) {
-	full_power = false;
+	flag_1 &= byte_index_off(FULL_POWER_IDX);
 	power_on = false;
 	set_new_duty_21(rc_duty_copy, new_duty, PWM_OFF);
 	return;
     }
     // Not off, and not full power
-    full_power = false;
+    flag_1 &= byte_index_off(FULL_POWER_IDX);
     power_on = true;
     // At higher PWM frequencies, halve the frequency
     // when starting -- this helps hard drive startup

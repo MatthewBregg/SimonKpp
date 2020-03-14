@@ -98,7 +98,6 @@ inline volatile PWM_STATUS_ENUM PWM_STATUS = PWM_NOP;
 inline volatile PWM_STATUS_ENUM PWM_ON_PTR = PWM_NOP;
 
 // Timer related
-inline volatile bool oct1_pending = false;
 inline volatile uint8_t ocr1ax = 0; // third byte of OCR1A.
 inline volatile uint8_t tcnt1x = 0; // third byte of TCNT1.
 inline volatile uint8_t tcnt2h = 0; // 2nd byte of tcnt2.
@@ -114,7 +113,6 @@ inline volatile uint8_t rct_beacon = 0; // Counter which increments while rc_tim
 // Motor Driving flags
 inline bool set_duty = false;
 inline bool power_on = false;
-inline volatile bool full_power = false;
 inline bool startup = false;
 inline bool aco_edge_high = false;
 inline bool timing_fast = false; // Does timing fit in 16 bits?
@@ -135,10 +133,15 @@ inline uint32_t com_timing = 0x00U; // time of last commutation.
 
 inline uint16_t sys_control = 0x00u; // duty limit
 
-// FET STATUS
-inline volatile bool a_fet = false;
-inline volatile bool b_fet = false;
-inline volatile bool c_fet = false;
+// Flag var.
+constexpr inline uint8_t A_FET_IDX = 1;
+constexpr inline uint8_t B_FET_IDX = 2;
+constexpr inline uint8_t C_FET_IDX = 3;
+constexpr inline uint8_t FULL_POWER_IDX = 4;
+// Timer related
+constexpr inline uint8_t OCT1_PENDING_IDX = 5;
+inline volatile bool oct1_pending = false;
+inline volatile uint8_t flag_1 = 0x00; // Contains a_fet, b_fet, c_fet, and full_power, and oct1_pending.
 
 // Startup vars
 inline uint8_t start_delay = 0x00u;

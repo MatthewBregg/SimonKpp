@@ -109,9 +109,7 @@ inline void commutate_c_on() {
 }
 
 inline void all_fets_false() {
-    a_fet = false;
-    b_fet = false;
-    c_fet = false;
+    flag_1 &= (byte_index_off(A_FET_IDX) & byte_index_off(B_FET_IDX) & byte_index_off(C_FET_IDX));
 }
 
 // An on, Cn off
@@ -119,7 +117,7 @@ inline void com1com6() {
     set_comp_phase_c();
     cli();
     all_fets_false();
-    a_fet = true;
+    flag_1 |= byte_index_on(A_FET_IDX);
     pwm_focus_c_off();
     pwm_a_copy(pwm_c_clear());
     pwm_focus_a_on();
@@ -140,7 +138,7 @@ inline void com5com4() {
     set_comp_phase_a();
     cli();
     all_fets_false();
-    b_fet = true;
+    flag_1 |= byte_index_on(B_FET_IDX);
     pwm_focus_a_off();
     pwm_b_copy(pwm_a_clear());
     pwm_focus_b_on();
@@ -161,7 +159,7 @@ inline void com3com2() {
     set_comp_phase_b();
     cli();
     all_fets_false();
-    c_fet = true;
+    flag_1 |= byte_index_on(C_FET_IDX);
     pwm_focus_b_off();
     pwm_c_copy(pwm_b_clear());
     pwm_focus_c_on();

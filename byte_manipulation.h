@@ -24,6 +24,15 @@ inline constexpr uint8_t getByteWithBitCleared(uint8_t bitIndex) {
 }
 
 
+
+inline constexpr uint8_t byte_index_on(uint8_t bitIndex) {
+    return getByteWithBitSet(bitIndex);
+}
+
+inline constexpr uint8_t byte_index_off(uint8_t bitIndex) {
+    return getByteWithBitCleared(bitIndex);
+}
+
 inline uint8_t get_low(const uint16_t in) {
     return 0xFFu & in;
 }

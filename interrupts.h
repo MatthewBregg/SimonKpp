@@ -133,14 +133,14 @@ inline void pwm_again() {
 }
 
 inline void pwm_on_fast() {
-    if (a_fet) {
+    if (flag_1 & byte_index_on(A_FET_IDX)) {
 	pwm_a_on();
     }
-    if (b_fet) {
+    if (flag_1 & byte_index_on(B_FET_IDX)) {
 	pwm_b_on();
     }
 
-    if (c_fet) {
+    if (flag_1 & byte_index_on(C_FET_IDX)) {
 	pwm_c_on();
     }
     setPwmToOff();
@@ -162,7 +162,7 @@ inline void pwm_off() {
 	pwm_again();
 	return;
     }
-    if ( full_power ) {
+    if ( flag_1 & byte_index_on(FULL_POWER_IDX) ) {
 	pwm_on(); // If full power, simply jump to keeping PWM_ON.
 	return;
     }
@@ -171,13 +171,13 @@ inline void pwm_off() {
 
     // Turn fets off now.
     // Offset by a few cycles, but should be equal on time.
-    if (a_fet) {
+    if (flag_1 & byte_index_on(A_FET_IDX)) {
 	pwm_a_off();
     }
-    if (b_fet) {
+    if (flag_1 & byte_index_on(B_FET_IDX)) {
 	pwm_b_off();
     }
-    if (c_fet) {
+    if (flag_1 & byte_index_on(C_FET_IDX)) {
 	pwm_c_off();
     }
     TCNT2 = (off_duty & 0xFF);
