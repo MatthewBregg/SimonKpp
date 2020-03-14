@@ -54,6 +54,7 @@ void update_timing() {
 
     // TLDR: Subtract our full 24bit copy of tcnt1x/TCNT1H/TCNT1L - last2_tcnt1_copy.
     uint32_t tcnt1_and_x_copy =  ((((uint32_t)tcnt1x_copy) << 16) | (tcnt1_copy)) - last2_tcnt1_copy;
+    tcnt1_and_x_copy &= 0xFFFFFF;
 
     if ( tcnt1_and_x_copy < (TIMING_MAX * cpu_mhz/2) ) {
 	// We've reached timing_max, divide sys_control by 2 and go to update_timing1.
@@ -137,13 +138,16 @@ void update_timing1(const uint32_t current_timing_period, const uint32_t last_tc
     // Is this shift going to set the carry?
     carry = undivided_value & 0x800000u;
     undivided_value = undivided_value << 1;
+    undivided_value &= 0xFFFFFF;
     --counter;
     do {
 	// We don't use this carry.
 	// bool carry_next = temp456 & 0x800000u;
 	temp456 = temp456 << 1;
+	temp456 &= 0xFFFFFF;
 	if (carry) {
 	    ++temp456;
+	    temp456 &= 0xFFFFFF;
 	}
 	// We don't use this carry.
 	// carry = carry_next;
@@ -156,13 +160,16 @@ void update_timing1(const uint32_t current_timing_period, const uint32_t last_tc
 	    }
 	    // subtraction here.
 	    temp456-=current_timing_period;
+	    temp456 &= 0xFFFFFF;
 	}
 	// Is our shift about to set the carry?
 	bool carry_next = undivided_value & 0x800000u;
 	undivided_value = undivided_value << 1;
+	undivided_value &= 0xFFFFFF;
 	// If we went into this with the OG carry set, add the carry on now.
 	if ( carry ) {
 	    ++undivided_value;
+	    undivided_value &= 0xFFFFFF;
 	}
 	// Now set the carry to if our shift would have set it.
 	carry = carry_next;
