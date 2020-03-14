@@ -129,7 +129,7 @@ void wait_startup() {
     uint32_t new_timing = START_DELAY_US * ((uint32_t) cpu_mhz);
     if ( goodies >= 2 ) {
 	const uint8_t degrees = start_delay;
-	const uint32_t start_destep_micros_clock_cycles = START_DSTEP_US * ((uint32_t) cpu_mhz) * 0x100u;
+	constexpr uint32_t start_destep_micros_clock_cycles = START_DSTEP_US * ((uint32_t) cpu_mhz) * 0x100u;
 	new_timing = update_timing_add_degrees(start_destep_micros_clock_cycles, new_timing, degrees);
     }
     set_ocr1a_rel(new_timing);

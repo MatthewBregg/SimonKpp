@@ -69,9 +69,9 @@ inline uint16_t safety_governor = 0x0000u * (cpu_mhz/2);
 // and then finish the period and reset?
 inline volatile uint16_t duty = 0;	//   on duty cycle, one's complement
 inline volatile uint16_t off_duty = 0;	//   on duty cycle, one's complement
-inline volatile uint16_t timing_duty = 0; // timing duty limit.
+inline uint16_t timing_duty = 0; // timing duty limit.
 // How much the RC command is telling us to peg the throttle at?
-inline volatile uint16_t rc_duty = 0x00;
+inline uint16_t rc_duty = 0x00;
 
 // The PWM interrupt uses this byte to determine which action to take.
 // Why an enum and not a function pointer? An enum should be 8 bits,
@@ -102,8 +102,9 @@ inline volatile bool oct1_pending = false;
 inline volatile uint8_t ocr1ax = 0; // third byte of OCR1A.
 inline volatile uint8_t tcnt1x = 0; // third byte of TCNT1.
 inline volatile uint8_t tcnt2h = 0; // 2nd byte of tcnt2.
-inline volatile uint32_t last_tcnt1 = 0x00u; // Last Timer1 value.
-inline volatile uint32_t last2_tcnt1 = 0x00u; // Last last Timer1 value.
+
+inline uint32_t last_tcnt1 = 0x00u; // Last Timer1 value.
+inline uint32_t last2_tcnt1 = 0x00u; // Last last Timer1 value.
 
 // RC Timeout values
 inline volatile uint8_t rc_timeout = 0;
@@ -111,28 +112,28 @@ inline volatile uint8_t rct_boot = 0; // Counter which increments while rc_timeo
 inline volatile uint8_t rct_beacon = 0; // Counter which increments while rc_timeout is 0 to disarm and beep occasionally (TODO delete?)
 
 // Motor Driving flags
-inline volatile bool set_duty = false;
-inline volatile bool power_on = false;
+inline bool set_duty = false;
+inline bool power_on = false;
 inline volatile bool full_power = false;
-inline volatile bool startup = false;
-inline volatile bool aco_edge_high = false;
-inline volatile bool timing_fast = false; // Does timing fit in 16 bits?
+inline bool startup = false;
+inline bool aco_edge_high = false;
+inline bool timing_fast = false; // Does timing fit in 16 bits?
 
 // Motor timing information.
-inline volatile uint8_t power_skip = 6U;
+inline uint8_t power_skip = 6U;
 // Goodies: Amount of Good zero-cross detections, good commutations, that's all.
-inline volatile uint8_t goodies = 0U;
+inline uint8_t goodies = 0U;
 // Both of these are 24 bits in simonk with _x, we will need to bitmask for the fast methods.
 // Making these 32 bit might not be as efficient, but using 3 bytes is stupid messy,
 // and coercing the compiler to actually make a 24 bit int type seems tricky, so...
 // This is a problem that won't exist on a 32 bit platform anywho.
 // timing_l, timing_h, timing_x
-inline volatile  uint32_t timing = 0x00U; // Interval of 2 commutations.
+inline uint32_t timing = 0x00U; // Interval of 2 commutations.
 // com_time_l, com_time_h, com_time_x
-inline volatile uint32_t com_timing = 0x00U; // time of last commutation.
+inline uint32_t com_timing = 0x00U; // time of last commutation.
 
 
-inline volatile uint16_t sys_control = 0x00u; // duty limit
+inline uint16_t sys_control = 0x00u; // duty limit
 
 // FET STATUS
 inline volatile bool a_fet = false;
@@ -140,10 +141,10 @@ inline volatile bool b_fet = false;
 inline volatile bool c_fet = false;
 
 // Startup vars
-inline volatile uint8_t start_delay = 0x00u;
+inline uint8_t start_delay = 0x00u;
  // Start modulation counter (to reduce heating from PWR_MAX_START if stuck)
-inline volatile uint8_t start_modulate = 0x00u;
+inline uint8_t start_modulate = 0x00u;
 // Number of start_modulate loops for eventual failure and disarm
-inline volatile uint8_t start_fail = 0x00u;
+inline uint8_t start_fail = 0x00u;
 
 #endif

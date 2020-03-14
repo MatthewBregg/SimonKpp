@@ -60,6 +60,7 @@ void set_ocr1a_abs_slow(const uint32_t new_timing) {
     // Lots of tricky 8bit->24bit->32bit conversion here, hopefully nothing is bugged, or too slow.
     const uint32_t tcnt1_combined = ((uint32_t)tcnt1x_copy << 16) | (uint32_t)tcnt1_in;
 
+    // TODO: Wrap in sei/cli?
     ocr1ax = (((new_timing - tcnt1_combined) & 0xFF000000u) >> 16) & 0x000000FFu;
 
     if (new_timing >= tcnt1_combined) {
