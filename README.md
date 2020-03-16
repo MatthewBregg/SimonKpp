@@ -13,3 +13,5 @@ I've unsure if the issue is simply a resource issue from moving to C++, or a log
 
 Maybe one day in the future I'll come back to this and find out. 
 
+This is currently running on an afro_nfet 20A full size, flashed via usbasp with make flash. 
+
